@@ -1,0 +1,14 @@
+[Unit]
+Description=HitTracker Device Mediator
+
+After=bluetooth
+
+[Service]
+Type=simple
+User=hittracker-device-mediator
+Group=hittracker-device-mediator
+ExecStart=/usr/share/hittracker-device-mediator/bin/hittracker-device-mediator --port 3000
+CapabilityBoundingSet=CAP_NET_RAW
+
+[Install]
+WantedBy=multi-user.target

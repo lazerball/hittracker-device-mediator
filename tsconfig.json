@@ -1,0 +1,23 @@
+{
+  "compilerOptions": {
+    "target": "es6",  // Specify ECMAScript target version: 'ES3' (default), 'ES5', 'ES2015', 'ES2016', 'ES2017', or 'ESNEXT'.
+    "module": "commonjs",
+    "declaration": true,
+    "lib": ["es2016"],
+    "outDir": "dist",
+    "removeComments": false,
+    "sourceMap": true,
+    "strict": true,
+    "pretty": true,
+    "baseUrl": ".",
+    "paths": {
+      "*": ["./types/*"]
+    },
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true
+  },
+  "exclude": [
+    "dist",
+    "out"
+  ]
+}
