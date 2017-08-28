@@ -20,6 +20,11 @@ export class GameController {
     } catch (error) {
       logger.error(error);
     }
+
+    setTimeout((config: GameConfiguration) => {
+      ble.stopGame(config);
+    }, gameConfiguration.gameLength * 1000, gameConfiguration);
+
     return 'Started Game';
   }
 

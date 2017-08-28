@@ -7,4 +7,5 @@ export const intersection = (a: any[], b: any[]): any[] => {
 
 export class GameConfiguration {
   public radioIds: string[];
+  public gameLength: number = 0;
 }
