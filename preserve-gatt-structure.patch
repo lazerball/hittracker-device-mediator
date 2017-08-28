@@ -1,0 +1,87 @@
+From 83584a7bf3aeb318bf722bb7f99efe5ecd83863f Mon Sep 17 00:00:00 2001
+From: mattgol <coder@feroxfilm.de>
+Date: Thu, 9 Feb 2017 20:50:45 +0100
+Subject: [PATCH] Store Gatt structure across connections
+
+---
+ node_modules/noble/lib/hci-socket/bindings.js       |  9 +++++++--
+ node_modules/noble/lib/hci-socket/gatt-structure.js | 12 ++++++++++++
+ node_modules/noble/lib/hci-socket/gatt.js           |  8 ++++----
+ 3 files changed, 23 insertions(+), 6 deletions(-)
+ create mode 100644 lib/hci-socket/gatt-structure.js
+
+diff --git a/node_modules/noble/lib/hci-socket/bindings.js b/lib/node_modules/noble/hci-socket/bindings.js
+index 3174a18..b82b8d0 100644
+--- a/node_modules/noble/lib/hci-socket/bindings.js
++++ b/node_modules/noble/lib/hci-socket/bindings.js
+@@ -5,6 +5,7 @@ var util = require('util');
+
+ var AclStream = require('./acl-stream');
+ var Gatt = require('./gatt');
++var GattStructure = require('./gatt-structure');
+ var Gap = require('./gap');
+ var Hci = require('./hci');
+ var Signaling = require('./signaling');
+@@ -22,6 +23,7 @@ var NobleBindings = function() {
+
+   this._handles = {};
+   this._gatts = {};
++  this._gattStructures = {};
+   this._aclStreams = {};
+   this._signalings = {};
+
+@@ -184,9 +186,12 @@ NobleBindings.prototype.onLeConnComplete = function(status, handle, role, addres
+     uuid = address.split(':').join('').toLowerCase();
+
+     var aclStream = new AclStream(this._hci, handle, this._hci.addressType, this._hci.address, addressType, address);
+-    var gatt = new Gatt(address, aclStream);
+-    var signaling = new Signaling(handle, aclStream);
+
++    if(!this._gattStructures.hasOwnProperty(uuid)) {
++      this._gattStructures[uuid] = new GattStructure();
++    }
++    var gatt = new Gatt(address, aclStream, this._gattStructures[uuid]);
++    var signaling = new Signaling(handle, aclStream);
+     this._gatts[uuid] = this._gatts[handle] = gatt;
+     this._signalings[uuid] = this._signalings[handle] = signaling;
+     this._aclStreams[handle] = aclStream;
+diff --git a/node_modules/noble/lib/hci-socket/gatt-structure.js b/node_modules/noble/lib/hci-socket/gatt-structure.js
+new file mode 100644
+index 0000000..9455201
+--- /dev/null
++++ b/node_modules/noble/lib/hci-socket/gatt-structure.js
+@@ -0,0 +1,12 @@
++//
++// Gatt Structure Encapsulation
++//
++
++var GattStructure = function() {
++    this._services = {};
++    this._characteristics = {};
++    this._descriptors = {};
++};
++
++
++module.exports = GattStructure;
+diff --git a/node_modules/noble/lib/hci-socket/gatt.js b/node_modules/noble/lib/hci-socket/gatt.js
+index 73a9d75..20c5918 100644
+--- a/node_modules/noble/lib/hci-socket/gatt.js
++++ b/node_modules/noble/lib/hci-socket/gatt.js
+@@ -55,13 +55,13 @@ var GATT_SERVER_CHARAC_CFG_UUID     = 0x2903;
+
+ var ATT_CID = 0x0004;
+
+-var Gatt = function(address, aclStream) {
++var Gatt = function(address, aclStream, gattStructure) {
+   this._address = address;
+   this._aclStream = aclStream;
+
+-  this._services = {};
+-  this._characteristics = {};
+-  this._descriptors = {};
++  this._services = gattStructure._services;
++  this._characteristics = gattStructure._characteristics;
++  this._descriptors = gattStructure._descriptors;
+
+   this._currentCommand = null;
+   this._commandQueue = [];
