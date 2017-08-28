@@ -1,33 +1,37 @@
-import {Request} from 'koa';
-import { Body, ContentType, Get, JsonController,  Post, Req } from 'routing-controllers';
+
+import { Body, ContentType, Get, JsonController, Post} from 'routing-controllers';
+
 import * as ble from '../ble';
-import {logger} from '../logging';
+import { GameConfiguration } from '../util';
+
+import { logger } from '../logging';
 
 @JsonController()
 export class GameController {
-
   @Post('/start')
   @ContentType('application/json')
   public async start(
     @Body({ required: true, validate: true })
-    gameConfiguration: ble.GameConfiguration,
-    @Req() request: Request,
+    gameConfiguration: GameConfiguration,
   ) {
-    logger.debug(JSON.stringify(gameConfiguration));
-
+    logger.debug(`Starting Game with configuration: ${JSON.stringify(gameConfiguration)}`);
     try {
-      await ble.startGame(gameConfiguration, request.url);
+      await ble.startGame(gameConfiguration);
     } catch (error) {
-      logger.error(error)
+      logger.error(error);
     }
     return 'Started Game';
   }
 
   @Post('/stop')
   @ContentType('application/json')
-  public async stop(@Req() request: Request) {
+  public async stop(
+    @Body({ required: true, validate: true })
+    gameConfiguration: GameConfiguration,
+  ) {
+    logger.debug('Stopping Game');
     try {
-      await ble.stopGame(request.url);
+      await ble.stopGame(gameConfiguration);
     } catch (error) {
       logger.error(error);
     }

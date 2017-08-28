@@ -1,20 +1,23 @@
 import axios from 'axios';
+import * as https from 'https';
 import * as noble from 'noble';
 import { logger } from './logging';
+import * as util from './util';
 
 const GAME_SERVICE_UUID = 'a800';
 const GAME_SERVICE_GAME_STATUS_CHAR_UUID = 'a801';
 
 const seenPeripherals = {} as any;
 const valuesToSend = {} as any;
+const stopScanningTimeOut = 5000;
+const startScanningTimeOut = 5000;
 let activePeripherals = [] as string[];
 let gameActive = false;
 let webAppUrl = '';
 
-export class GameConfiguration {
-  public radioList: string[];
-}
-
+export const setHitUrlBase = (urlBase: string) => {
+  webAppUrl = urlBase;
+};
 const getHttpInstance = (url: string) => {
   return axios.create({
     baseURL: url,
@@ -23,6 +26,7 @@ const getHttpInstance = (url: string) => {
       'Content-Type': 'application/json',
     },
     timeout: 5000,
+    httpsAgent: new https.Agent({ rejectUnauthorized: false }),
   });
 };
 
@@ -49,30 +53,18 @@ export const setupNoble = async () => {
 
   noble.on('discover', discoverPeripherals);
   noble.on('warning', (warning: string) => {
-    logger.warn(warning);
-  });
-};
-
-const toggleGameStatusCharacteristic = (characteristic: noble.Characteristic, value: number) => {
-  const gameStatus = new Buffer(1);
-  gameStatus.writeUInt8(value, 0);
-  characteristic.write(gameStatus, false, error => {
-    logger.info(`toggle gameStatus to ${value}`);
-    if (error) {
-      logger.error(`Couldn't toggle gameStatus because: ${error}`);
-    }
+    logger.warn(`NOBLE WARNING: ${warning}`);
   });
 };
 
 const setPeripheralGameStatus = async (peripheral: noble.Peripheral, gameStatus: number) => {
-  logger.info(`Connecting to peripheral: ${peripheral.uuid}`);
+  logger.info(`Connecting to peripheral: ${peripheral.address}`);
 
-  stopScanning();
   peripheral.connect(error => {
     if (error) {
-      logger.error(error);
+      logger.error(`Couldn't connect to peripheral because: ${error}`);
     }
-    logger.info(`Connected to peripheral: ${peripheral.uuid}`);
+    logger.info(`Connected to peripheral: ${peripheral.address}`);
     peripheral.discoverSomeServicesAndCharacteristics(
       [GAME_SERVICE_UUID],
       [GAME_SERVICE_GAME_STATUS_CHAR_UUID],
@@ -83,44 +75,55 @@ const setPeripheralGameStatus = async (peripheral: noble.Peripheral, gameStatus:
         logger.info(`discovered game service: ${services[0].uuid}`);
 
         const gameStatusCharacteristic = characteristics[0];
-        toggleGameStatusCharacteristic(gameStatusCharacteristic, gameStatus);
-        peripheral.disconnect(() => {
-          logger.info(`Disconnected from ${peripheral.address}`);
-          startScanning();
+        const gameStatusBuffer = new Buffer(1);
+
+        gameStatusBuffer.writeUInt8(gameStatus, 0);
+        gameStatusCharacteristic.write(gameStatusBuffer, false, writeError => {
+          logger.info(`toggle gameStatus to ${gameStatus}`);
+          if (error) {
+            logger.error(`Couldn't toggle gameStatus because: ${error}`);
+          }
+          peripheral.disconnect(() => {
+            logger.info(`Disconnected from ${peripheral.address}`);
+          });
         });
+
         logger.info(`finished toggling for ${peripheral.address}`);
       }
     );
   });
 };
 
-export const stopGame = async (url: string) => {
-  webAppUrl = url
-  logger.info(`Stopping game for peripherals: ${JSON.stringify(Object.keys(activePeripherals))}`);
-  Object.keys(activePeripherals).forEach(async address => {
-    valuesToSend[address] = { zone1: 0, zone2: 0 };
-    const peripheral = seenPeripherals[address];
-    try {
-      await setPeripheralGameStatus(peripheral, 0);
-    } catch (error) {
-      logger.error(`Failed to stop game because: ${error}`);
+export const stopGame = async (gameConfiguration: util.GameConfiguration) => {
+  stopScanning();
+  const stopPeripherals = activePeripherals ? gameConfiguration.radioIds : [];
+  logger.info(`Stopping game for peripherals: ${JSON.stringify(stopPeripherals)}`);
+  stopPeripherals.forEach(async address => {
+    if (seenPeripherals.hasOwnProperty(address)) {
+      valuesToSend[address] = { zone1: 0, zone2: 0 };
+      const peripheral = seenPeripherals[address];
+      try {
+        await setPeripheralGameStatus(peripheral, 0);
+      } catch (error) {
+        logger.error(`Failed to stop game because: ${error}`);
+      }
     }
   });
+  setTimeout(() => {
+    startScanning();
+  }, startScanningTimeOut);
+
   activePeripherals = [];
+
   gameActive = false;
 };
 
-// Intersection (a ∩ b): create a set that contains those elements of set a that are also in set b.
-const getActiveGamePeripherals = (knownPeripherals: string[], gamePeripherals: string[]): string[] => {
-  const a = new Set(knownPeripherals);
-  const b = new Set(gamePeripherals);
-  return Array.from(new Set([...a].filter(x => b.has(x))));
-};
-export const startGame = async (gameConfiguration: GameConfiguration, url: string) => {
-  logger.info('Stopping Game');
-  webAppUrl = url;
-  const ourPeripherals = getActiveGamePeripherals(seenPeripherals, gameConfiguration.radioList);
-  Object.keys(ourPeripherals).forEach(async address => {
+export const startGame = async (gameConfiguration: util.GameConfiguration) => {
+  logger.info('Starting Game');
+  stopScanning();
+  const ourPeripherals = util.intersection(Object.keys(seenPeripherals), gameConfiguration.radioIds);
+
+  ourPeripherals.forEach(async address => {
     valuesToSend[address] = { zone1: 0, zone2: 0 };
     activePeripherals.push(address);
     const peripheral = seenPeripherals[address];
@@ -131,6 +134,10 @@ export const startGame = async (gameConfiguration: GameConfiguration, url: strin
       logger.error(`Failed to start game because: ${error}`);
     }
   });
+  setTimeout(() => {
+    startScanning();
+  }, startScanningTimeOut);
+
   gameActive = true;
 };
 
@@ -148,7 +155,7 @@ const discoverPeripherals = (peripheral: noble.Peripheral) => {
     const hitSection = manufacturerData.slice(1);
     const data = {
       zone1: hitSection.readUInt16LE(0),
-      zone2: hitSection.readUInt16LE(1),
+      zone2: hitSection.readUInt16BE(1),
     };
     logger.debug(JSON.stringify(data));
     if (gameActive) {
@@ -169,7 +176,7 @@ const discoverPeripherals = (peripheral: noble.Peripheral) => {
 };
 
 const sendRequest = async (url: string, radioId: string, zone: number) => {
-  logger.info(`Sending Request for ${radioId}:${zone}`);
+  logger.info(`Sending Request to ${url} for ${radioId}:${zone}`);
   const http = getHttpInstance(url);
 
   const data = {
