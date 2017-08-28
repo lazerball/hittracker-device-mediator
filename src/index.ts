@@ -16,8 +16,8 @@ program
   .version(packageJson.version)
   .option('-u, --hit-url [url]', 'hit url', 'http://localhost')
   .option('-p, --port [port]', 'port', 3000)
-  .option('-d,--hci-device', 'HCI Device', 'hci0')
-  .option('-v,--verbose', 'Show all info')
+  .option('-d, --hci-device [hci-device]', 'HCI Device', 'hci0')
+  .option('-v, --verbose', 'Show all info')
   .parse(process.argv);
 
 logger.transports.console.level = 'info';
