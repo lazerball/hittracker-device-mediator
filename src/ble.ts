@@ -7,10 +7,9 @@ const GAME_SERVICE_GAME_STATUS_CHAR_UUID = 'a801';
 
 const seenPeripherals = {} as any;
 const valuesToSend = {} as any;
-const stopScanningTimeOut = 5000;
-const startScanningTimeOut = 5000;
+const stopScanningTimeOut = 10000;
+const startScanningTimeOut = 10000;
 let activePeripherals = [] as string[];
-let gameActive = false;
 let webAppUrl = '';
 
 export const setHitUrlBase = (urlBase: string) => {
@@ -101,8 +100,6 @@ export const stopGame = async (gameConfiguration: util.GameConfiguration) => {
   }, startScanningTimeOut);
 
   activePeripherals = [];
-
-  gameActive = false;
 };
 
 export const startGame = async (gameConfiguration: util.GameConfiguration) => {
@@ -124,8 +121,6 @@ export const startGame = async (gameConfiguration: util.GameConfiguration) => {
   setTimeout(() => {
     startScanning();
   }, startScanningTimeOut);
-
-  gameActive = true;
 };
 
 const discoverPeripherals = (peripheral: noble.Peripheral) => {
@@ -145,13 +140,11 @@ const discoverPeripherals = (peripheral: noble.Peripheral) => {
       zone2: hitSection.readUInt16BE(1),
     };
     logger.debug(JSON.stringify(data));
-    if (gameActive) {
-      if (valuesToSend[address].zone1 < data.zone1) {
-        util.sendRequest(webAppUrl, address, 1);
-      }
-      if (valuesToSend[address].zone2 < data.zone2) {
-        util.sendRequest(webAppUrl, address, 2);
-      }
+    if (valuesToSend[address].zone1 < data.zone1) {
+      util.sendRequest(webAppUrl, address, 1);
+    }
+    if (valuesToSend[address].zone2 < data.zone2) {
+      util.sendRequest(webAppUrl, address, 2);
     }
 
     valuesToSend[address] = data;
@@ -161,4 +154,3 @@ const discoverPeripherals = (peripheral: noble.Peripheral) => {
         log(`\t\t'${peripheral.advertisement.txPowerLevel}`);
     }*/
 };
-
