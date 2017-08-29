@@ -1,5 +1,3 @@
-import axios from 'axios';
-import * as https from 'https';
 import * as noble from 'noble';
 import { logger } from './logging';
 import * as util from './util';
@@ -17,17 +15,6 @@ let webAppUrl = '';
 
 export const setHitUrlBase = (urlBase: string) => {
   webAppUrl = urlBase;
-};
-const getHttpInstance = (url: string) => {
-  return axios.create({
-    baseURL: url,
-    headers: {
-      Accept: 'application/json;version=0.1',
-      'Content-Type': 'application/json',
-    },
-    timeout: 5000,
-    httpsAgent: new https.Agent({ rejectUnauthorized: false }),
-  });
 };
 
 export const startScanning = () => {
@@ -160,10 +147,10 @@ const discoverPeripherals = (peripheral: noble.Peripheral) => {
     logger.debug(JSON.stringify(data));
     if (gameActive) {
       if (valuesToSend[address].zone1 < data.zone1) {
-        sendRequest(webAppUrl, address, 1);
+        util.sendRequest(webAppUrl, address, 1);
       }
       if (valuesToSend[address].zone2 < data.zone2) {
-        sendRequest(webAppUrl, address, 2);
+        util.sendRequest(webAppUrl, address, 2);
       }
     }
 
@@ -175,22 +162,3 @@ const discoverPeripherals = (peripheral: noble.Peripheral) => {
     }*/
 };
 
-const sendRequest = async (url: string, radioId: string, zone: number) => {
-  logger.info(`Sending Request to ${url} for ${radioId}:${zone}`);
-  const http = getHttpInstance(url);
-
-  const data = {
-    events: [
-      {
-        event: 'hit',
-        radioId,
-        zone,
-      },
-    ],
-  };
-  try {
-    await http.post('/games/hit', JSON.stringify(data));
-  } catch (e) {
-    logger.error(e);
-  }
-};
