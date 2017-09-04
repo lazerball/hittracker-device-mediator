@@ -1,5 +1,5 @@
 
-import { Body, ContentType, Get, JsonController, Param, Post} from 'routing-controllers';
+import { Body, ContentType, Get, JsonController, NotFoundError, Param, Post} from 'routing-controllers';
 
 import * as ble from '../ble';
 import { GameConfiguration } from '../util';
@@ -17,6 +17,10 @@ export class GameController {
     @Param('address') address: string,
     @Param('value') value: number,
   ) {
+
+    if (!ble.seenPeripheralAddress(address)) {
+      throw new NotFoundError(`Peripheral ${address} was not found`);
+    }
     logger.debug(`Setting unit ${address} status to ${value}`);
     try {
       ble.stopScanning();

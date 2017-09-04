@@ -119,7 +119,16 @@ export const startGame = async (gameConfiguration: util.GameConfiguration) => {
   }, startScanningTimeOut);
 };
 
+export const seenPeripheralAddress = (address: string) => {
+  return seenPeripherals.hasOwnProperty(address);
+};
 export const setPeripheralValue = async (address: string, value: number) => {
+
+  if (!seenPeripheralAddress(address)) {
+    logger.warn(`We haven't seen ${address}, so we can't set a value on the peripheral`);
+    return;
+  }
+
   const peripheral = seenPeripherals[address];
   await setPeripheralGameStatus(peripheral, value);
   valuesToSend[address] = { zone1: 0, zone2: 0 };
