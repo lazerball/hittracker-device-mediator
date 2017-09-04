@@ -133,7 +133,6 @@ export const setPeripheralValue = async (address: string, value: number) => {
 const discoverPeripherals = (peripheral: noble.Peripheral) => {
   const localName = peripheral.advertisement.localName;
   const address = peripheral.address;
-  logger.debug(`[${address}] <${peripheral.addressType}> RSSI ${peripheral.rssi} NAME: ${localName}`);
 
   if (!seenPeripherals[address]) {
     seenPeripherals[address] = peripheral;
@@ -146,7 +145,8 @@ const discoverPeripherals = (peripheral: noble.Peripheral) => {
       zone1: hitSection.readUInt16LE(0),
       zone2: hitSection.readUInt16BE(1),
     };
-    logger.debug(JSON.stringify(data));
+
+    logger.debug(`[${address}] RSSI ${peripheral.rssi} NAME: ${localName} DATA: ${JSON.stringify(data)}`);
     if (valuesToSend[address].zone1 < data.zone1) {
       util.sendRequest(webAppUrl, address, 1);
     }
