@@ -1,3 +1,4 @@
+import * as _ from 'lodash';
 import * as noble from 'noble';
 import { logger } from './logging';
 import * as util from './util';
@@ -8,7 +9,7 @@ const GAME_SERVICE_GAME_STATUS_CHAR_UUID = 'a801';
 const seenPeripherals = {} as any;
 const valuesToSend = {} as any;
 const stopScanningTimeOut = 10000;
-const startScanningTimeOut = 10000;
+const startScanningTimeOut = 20000;
 let activePeripherals = [] as string[];
 let webAppUrl = '';
 
@@ -86,10 +87,8 @@ export const stopGame = async (gameConfiguration: util.GameConfiguration) => {
   logger.info(`Stopping game for peripherals: ${JSON.stringify(stopPeripherals)}`);
   stopPeripherals.forEach(async address => {
     if (seenPeripherals.hasOwnProperty(address)) {
-      valuesToSend[address] = { zone1: 0, zone2: 0 };
-      const peripheral = seenPeripherals[address];
       try {
-        await setPeripheralGameStatus(peripheral, 0);
+        await setPeripheralValue(address, 0);
       } catch (error) {
         logger.error(`Failed to stop game because: ${error}`);
       }
@@ -107,20 +106,28 @@ export const startGame = async (gameConfiguration: util.GameConfiguration) => {
   stopScanning();
   const ourPeripherals = util.intersection(Object.keys(seenPeripherals), gameConfiguration.radioIds);
 
-  ourPeripherals.forEach(async address => {
-    valuesToSend[address] = { zone1: 0, zone2: 0 };
-    activePeripherals.push(address);
-    const peripheral = seenPeripherals[address];
-
-    try {
-      await setPeripheralGameStatus(peripheral, 1);
-    } catch (error) {
-      logger.error(`Failed to start game because: ${error}`);
+  const chunkedPeripheralAddresses = _.chunk(ourPeripherals, 3);
+  for (const peripheralAddressGroup of chunkedPeripheralAddresses) {
+    const promiseGroup = [];
+    for (const address of peripheralAddressGroup) {
+        promiseGroup.push(setPeripheralValue(address, 1));
     }
-  });
+    Promise.resolve(promiseGroup);
+  }
   setTimeout(() => {
     startScanning();
   }, startScanningTimeOut);
+};
+
+export const setPeripheralValue = async (address: string, value: number) => {
+  const peripheral = seenPeripherals[address];
+  await setPeripheralGameStatus(peripheral, value);
+  valuesToSend[address] = { zone1: 0, zone2: 0 };
+  if (value === 0) {
+    _.remove(activePeripherals, removeAddress => removeAddress === address);
+  } else {
+    activePeripherals.push(address);
+  }
 };
 
 const discoverPeripherals = (peripheral: noble.Peripheral) => {
