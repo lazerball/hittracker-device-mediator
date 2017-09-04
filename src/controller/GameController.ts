@@ -8,6 +8,7 @@ import { logger } from '../logging';
 
 @JsonController()
 export class GameController {
+  private gameTimer: any;
   @Post('/start')
   @ContentType('application/json')
   public async start(
@@ -21,7 +22,7 @@ export class GameController {
       logger.error(error);
     }
 
-    setTimeout((config: GameConfiguration) => {
+    this.gameTimer = setTimeout((config: GameConfiguration) => {
       ble.stopGame(config);
     }, gameConfiguration.gameLength * 1000, gameConfiguration);
 
@@ -35,6 +36,10 @@ export class GameController {
     gameConfiguration: GameConfiguration,
   ) {
     logger.debug('Stopping Game');
+
+    if (this.gameTimer) {
+      clearTimeout(this.gameTimer);
+    }
     try {
       await ble.stopGame(gameConfiguration);
     } catch (error) {
