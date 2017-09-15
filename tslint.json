@@ -1,15 +1,15 @@
 {
-    "defaultSeverity": "error",
-    "extends": [
-        "tslint:latest",
-        "tslint-config-standard",
-        "tslint-config-prettier"
-    ],
-    "jsRules": {},
-    "rules": {
-        "max-classes-per-file": [true, 4],
-        "object-literal-sort-keys": false,
-        "semicolon": [true, "always"]
-    },
-    "rulesDirectory": []
+  "defaultSeverity": "error",
+  "extends": [
+    "tslint:latest",
+    "tslint-config-standard",
+    "tslint-config-prettier"
+  ],
+  "rules": {
+    "no-var-requires": true,
+    "no-require-imports": false,
+    "max-classes-per-file": [true, 4],
+    "object-literal-sort-keys": false,
+    "semicolon": [true, "always"]
+  }
 }
