@@ -6,6 +6,7 @@ import { logger } from './logging';
 import 'reflect-metadata';
 import { createKoaServer } from 'routing-controllers';
 import { GameController } from './controller/GameController';
+import { UnitController } from './controller/UnitController';
 
 import * as ble from './ble';
 
@@ -28,7 +29,7 @@ if (program.verbose) {
 process.env.NOBLE_HCI_DEVICE_ID = program.hciDevice.replace('hci', '');
 
 const app = createKoaServer({
-  controllers: [GameController],
+  controllers: [GameController, UnitController],
 });
 
 app.use(KoaLoggerWinston(logger));

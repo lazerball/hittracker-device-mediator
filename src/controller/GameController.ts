@@ -11,29 +11,6 @@ export class GameController {
   private gameTimer: any;
   private gameActive: boolean;
 
-  @Post('/unit/:address/:value')
-  @ContentType('application/json')
-  public async unitToggle(
-    @Param('address') address: string,
-    @Param('value') value: number,
-  ) {
-
-    if (!ble.seenPeripheralAddress(address)) {
-      throw new NotFoundError(`Peripheral ${address} was not found`);
-    }
-    logger.debug(`Setting unit ${address} status to ${value}`);
-    try {
-      ble.stopScanning();
-      await ble.setPeripheralValue(address, value);
-      this.gameTimer = setTimeout(() => {
-        ble.startScanning();
-    }, 3000);
-
-    } catch (error) {
-      logger.error(error);
-    }
-    return `Setting unit ${address} status to ${value}`;
-  }
 
   @Post('/start')
   @ContentType('application/json')
