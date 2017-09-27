@@ -1,4 +1,3 @@
-
 import { Body, ContentType, Get, JsonController, NotFoundError, Param, Post } from 'routing-controllers';
 
 import * as ble from '../ble';
@@ -28,7 +27,7 @@ export class GameController {
       ble.stopGame(config);
     }, gameConfiguration.gameLength * 1000, gameConfiguration);
 
-    return 'Started Game';
+    return { msg: 'Started Game' };
   }
 
   @Post('/stop')
