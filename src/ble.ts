@@ -6,7 +6,7 @@ import * as util from './util';
 const GAME_SERVICE_UUID = 'a800';
 const GAME_SERVICE_GAME_STATUS_CHAR_UUID = 'a801';
 
-const seenPeripherals = {} as any;
+export const seenPeripherals = {} as any;
 const valuesToSend = {} as any;
 const startScanningTimeOut = 20000;
 let activePeripherals = [] as string[];
