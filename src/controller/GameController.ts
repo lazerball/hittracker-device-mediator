@@ -1,5 +1,5 @@
 
-import { Body, ContentType, Get, JsonController, NotFoundError, Param, Post} from 'routing-controllers';
+import { Body, ContentType, Get, JsonController, NotFoundError, Param, Post } from 'routing-controllers';
 
 import * as ble from '../ble';
 import { GameConfiguration } from '../util';
@@ -11,12 +11,11 @@ export class GameController {
   private gameTimer: any;
   private gameActive: boolean;
 
-
   @Post('/start')
   @ContentType('application/json')
   public async start(
     @Body({ required: true, validate: true })
-    gameConfiguration: GameConfiguration,
+    gameConfiguration: GameConfiguration
   ) {
     logger.debug(`Starting Game with configuration: ${JSON.stringify(gameConfiguration)}`);
     try {
@@ -36,7 +35,7 @@ export class GameController {
   @ContentType('application/json')
   public async stop(
     @Body({ required: true, validate: true })
-    gameConfiguration: GameConfiguration,
+    gameConfiguration: GameConfiguration
   ) {
     logger.debug('Stopping Game');
 
@@ -48,6 +47,6 @@ export class GameController {
     } catch (error) {
       logger.error(error);
     }
-    return 'Stopped Game';
+    return { msg: 'Stopped Game' };
   }
 }
