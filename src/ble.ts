@@ -8,7 +8,6 @@ const GAME_SERVICE_GAME_STATUS_CHAR_UUID = 'a801';
 
 const seenPeripherals = {} as any;
 const valuesToSend = {} as any;
-const stopScanningTimeOut = 10000;
 const startScanningTimeOut = 20000;
 let activePeripherals = [] as string[];
 let webAppUrl = '';
