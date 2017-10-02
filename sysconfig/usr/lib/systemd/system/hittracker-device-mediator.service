@@ -1,8 +1,8 @@
 [Unit]
 Description=HitTracker Device Mediator
-
-After=bluetooth
-
+After=bluetooth.service
+PartOf=bluetooth.service
+StopWhenUnneeded=yes
 [Service]
 Type=simple
 User=hittracker-device-mediator
@@ -12,4 +12,4 @@ AmbientCapabilities=CAP_NET_RAW
 
 
 [Install]
-WantedBy=multi-user.target
+WantedBy=bluetooth.target
