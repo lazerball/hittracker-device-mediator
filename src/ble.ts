@@ -26,21 +26,8 @@ export const stopScanning = () => {
   noble.stopScanning();
 };
 
-export const setupNoble = async () => {
-  logger.info('Setting up Noble');
-  noble.on('stateChange', state => {
-    logger.info(`State Changed to: ${state}`);
-    if (state === 'poweredOn') {
-      startScanning();
-    } else {
-      stopScanning();
-    }
-  });
-
-  noble.on('discover', discoverPeripherals);
-  noble.on('warning', (warning: string) => {
-    logger.warn(`NOBLE WARNING: ${warning}`);
-  });
+export const seenPeripheralAddress = (address: string) => {
+  return seenPeripherals.hasOwnProperty(address);
 };
 
 const setPeripheralGameStatus = async (peripheral: noble.Peripheral, gameStatus: number) => {
@@ -80,6 +67,24 @@ const setPeripheralGameStatus = async (peripheral: noble.Peripheral, gameStatus:
   });
 };
 
+export const setPeripheralValue = async (address: string, value: number) => {
+
+  if (!seenPeripheralAddress(address)) {
+    logger.warn(`We haven't seen ${address}, so we can't set a value on the peripheral`);
+    return;
+  }
+
+  const peripheral = seenPeripherals[address];
+  await setPeripheralGameStatus(peripheral, value);
+  valuesToSend[address] = { zone1: 0, zone2: 0 };
+  if (value === 0) {
+    _.remove(activePeripherals, removeAddress => removeAddress === address);
+  } else {
+    activePeripherals.push(address);
+  }
+};
+
+
 export const stopGame = async (gameConfiguration: util.GameConfiguration) => {
   stopScanning();
   const stopPeripherals = activePeripherals ? gameConfiguration.radioIds : [];
@@ -118,26 +123,6 @@ export const startGame = async (gameConfiguration: util.GameConfiguration) => {
   }, startScanningTimeOut);
 };
 
-export const seenPeripheralAddress = (address: string) => {
-  return seenPeripherals.hasOwnProperty(address);
-};
-export const setPeripheralValue = async (address: string, value: number) => {
-
-  if (!seenPeripheralAddress(address)) {
-    logger.warn(`We haven't seen ${address}, so we can't set a value on the peripheral`);
-    return;
-  }
-
-  const peripheral = seenPeripherals[address];
-  await setPeripheralGameStatus(peripheral, value);
-  valuesToSend[address] = { zone1: 0, zone2: 0 };
-  if (value === 0) {
-    _.remove(activePeripherals, removeAddress => removeAddress === address);
-  } else {
-    activePeripherals.push(address);
-  }
-};
-
 const discoverPeripherals = (peripheral: noble.Peripheral) => {
   const localName = peripheral.advertisement.localName;
   const address = peripheral.address;
@@ -169,3 +154,21 @@ const discoverPeripherals = (peripheral: noble.Peripheral) => {
         log(`\t\t'${peripheral.advertisement.txPowerLevel}`);
     }*/
 };
+
+export const setupNoble = async () => {
+  logger.info('Setting up Noble');
+  noble.on('stateChange', state => {
+    logger.info(`State Changed to: ${state}`);
+    if (state === 'poweredOn') {
+      startScanning();
+    } else {
+      stopScanning();
+    }
+  });
+
+  noble.on('discover', discoverPeripherals);
+  noble.on('warning', (warning: string) => {
+    logger.warn(`NOBLE WARNING: ${warning}`);
+  });
+};
+
