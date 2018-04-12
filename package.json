@@ -43,5 +43,11 @@
     "tslint-config-prettier": "^1.10.0",
     "tslint-config-standard": "^7.0",
     "typescript": "^2.8.1"
+  },
+  "prettier": {
+    "semi": true,
+    "singleQuote": true,
+    "printWidth": 120,
+    "trailingComma": "es5"
   }
 }
