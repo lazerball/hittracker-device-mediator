@@ -4,11 +4,10 @@ import * as KoaLoggerWinston from 'koa-logger-winston';
 import { logger } from './logging';
 
 import 'reflect-metadata';
-import { createKoaServer } from 'routing-controllers';
-import { GameController } from './controller/GameController';
-import { UnitController } from './controller/UnitController';
+import { createKoaServer, useContainer } from 'routing-controllers';
 
-import * as ble from './ble';
+import { Container } from 'typedi';
+import {HitTrackerDeviceManager } from './ble';
 
 // tslint:disable-next-line: no-var-requires
 const packageJson = require('../package.json');
@@ -18,6 +17,7 @@ program
   .option('-u, --hit-url [url]', 'hit url', 'http://localhost')
   .option('-p, --port [port]', 'port', 3000)
   .option('-d, --hci-device [hci-device]', 'HCI Device', 'hci0')
+  .option('-s, --scan-while-connected', 'Show all info')
   .option('-v, --verbose', 'Show all info')
   .parse(process.argv);
 
@@ -28,12 +28,17 @@ if (program.verbose) {
 
 process.env.NOBLE_HCI_DEVICE_ID = program.hciDevice.replace('hci', '');
 
+const deviceManager = new HitTrackerDeviceManager(program.hitUrl);
+deviceManager.setupNoble();
+
+useContainer(Container);
+Container.set('device-manager', deviceManager);
+
 const app = createKoaServer({
-  controllers: [GameController, UnitController],
+  controllers: [`${__dirname}/controller/*.ts`],
 });
 
 app.use(KoaLoggerWinston(logger));
-ble.setHitUrlBase(program.hitUrl);
-ble.setupNoble();
+
 app.listen(program.port);
 logger.info(`Server is up and running at port ${program.port}`);

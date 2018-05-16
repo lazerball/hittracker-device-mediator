@@ -42,7 +42,7 @@ export const sendRequest = async (url: string, radioId: string, zone: number) =>
 };
 
 export class GameConfiguration {
-  public radioIds: string[];
+  public radioIds: string[] = [];
   public gameLength: number = 0;
 }
 

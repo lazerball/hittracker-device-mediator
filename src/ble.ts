@@ -3,172 +3,330 @@ import * as noble from 'noble';
 import { logger } from './logging';
 import * as util from './util';
 
+import { Service } from 'typedi';
+
 const GAME_SERVICE_UUID = 'a800';
 const GAME_SERVICE_GAME_STATUS_CHAR_UUID = 'a801';
+const GAME_SERVICE_LED_CONFIGURE_CHAR_UUID = 'a803';
 
-export const seenPeripherals = {} as any;
-const valuesToSend = {} as any;
-const startScanningTimeOut = 20000;
-let activePeripherals = [] as string[];
-let webAppUrl = '';
+let scanWhileConnecting = false;
 
-export const setHitUrlBase = (urlBase: string) => {
-  webAppUrl = urlBase;
-};
+type DeviceMap = Map<string, HitTrackerDevice>;
 
-export const startScanning = () => {
-  logger.info('Start Scan');
-  noble.startScanning([GAME_SERVICE_UUID], true /* allowDuplicates*/);
-};
+export enum GameTypes {
+  BLINK,
+  HP,
+}
+export enum LedColorPattern {
+  SOLID,
+  CHASE_FORWARD,
+  CHASE_BACKWARD,
+  CHASE_INWARD,
+  CHASE_THEATER,
+  CHASE_THEATER_RAINBOW, // ignores color
+  RAINBOW, // ignores color
+}
 
-export const stopScanning = () => {
-  logger.info('Stop Scan');
-  noble.stopScanning();
-};
+export interface ILedColor {
+  red: number;
+  green: number;
+  blue: number;
+}
 
-export const seenPeripheralAddress = (address: string) => {
-  return seenPeripherals.hasOwnProperty(address);
-};
+export interface ILedConfig {
+  pattern: LedColorPattern;
+  color: ILedColor;
+  timePerPixel: number;
+  hitPattern: LedColorPattern;
+  hitColor: ILedColor;
+  hitBlinkTime: number;
+  hitTimePerPixel: number;
+}
+export interface ILedZonesConfig {
+  zones: ILedConfig[];
+  gameType: GameTypes;
+}
 
-const setPeripheralGameStatus = async (peripheral: noble.Peripheral, gameStatus: number) => {
-  logger.info(`Connecting to peripheral: ${peripheral.address}`);
+interface IGameConfig {
+  gameType: GameTypes;
+  lowHp: number;
+  mediumHP: number;
+  fullHP: number;
+  ledConfigs: ILedZonesConfig;
+}
 
-  peripheral.connect(error => {
-    if (error) {
-      logger.error(`Couldn't connect to peripheral because: ${error}`);
-    }
-    logger.info(`Connected to peripheral: ${peripheral.address}`);
-    peripheral.discoverSomeServicesAndCharacteristics(
-      [GAME_SERVICE_UUID],
-      [GAME_SERVICE_GAME_STATUS_CHAR_UUID],
-      async (discoverError, services, characteristics) => {
-        if (discoverError) {
-          logger.error(`Failed to discover characteristic because: ${error}`);
-        }
-        logger.info(`discovered game service: ${services[0].uuid}`);
+export interface IHit {
+  zone1: number;
+  zone2: number;
+  zone3: number;
+}
+export class HitTrackerDevice {
+  public txPowerLevel = 0;
+  public batteryLevel = 100;
 
-        const gameStatusCharacteristic = characteristics[0];
-        const gameStatusBuffer = new Buffer(1);
+  public active = false;
+  public lastSeen: number;
+  private peripheral: noble.Peripheral;
 
-        gameStatusBuffer.writeUInt8(gameStatus, 0);
-        gameStatusCharacteristic.write(gameStatusBuffer, false, writeError => {
-          logger.info(`toggle gameStatus to ${gameStatus}`);
-          if (error) {
-            logger.error(`Couldn't toggle gameStatus because: ${error}`);
+  private data: IHit = { zone1: 0, zone2: 0, zone3: 0 };
+
+  constructor(peripheral: noble.Peripheral) {
+    this.peripheral = peripheral;
+    this.txPowerLevel = this.peripheral.advertisement.txPowerLevel;
+    this.lastSeen = Date.now();
+  }
+
+  public async setLedConfiguration(ledConfig: ILedZonesConfig) {
+    logger.info(`Connecting to peripheral: ${this.peripheral.address}`);
+
+    this.peripheral.connect(error => {
+      if (error) {
+        logger.error(`Couldn't connect to peripheral because: ${error}`);
+      }
+      logger.info(`Connected to peripheral: ${this.peripheral.address}`);
+      this.peripheral.discoverSomeServicesAndCharacteristics(
+        [GAME_SERVICE_UUID],
+        [GAME_SERVICE_LED_CONFIGURE_CHAR_UUID],
+        (discoverError, services, characteristics) => {
+          if (discoverError) {
+            logger.error(`Failed to discover characteristic because: ${error}`);
           }
-          peripheral.disconnect(() => {
-            logger.info(`Disconnected from ${peripheral.address}`);
+          const ledConfigCharacteristic = characteristics[0];
+
+          for (const [zone, zoneLedConfig] of Object.entries(ledConfig.zones)) {
+            const ledConfigBuffer = Buffer.alloc(16);
+            ledConfigBuffer.writeUInt8(ledConfig.gameType, 0);
+            ledConfigBuffer.writeUInt8(parseInt(zone, 10), 1);
+            ledConfigBuffer.writeUInt8(zoneLedConfig.pattern, 2);
+            ledConfigBuffer.writeUInt8(zoneLedConfig.color.red, 3);
+            ledConfigBuffer.writeUInt8(zoneLedConfig.color.green, 4);
+            ledConfigBuffer.writeUInt8(zoneLedConfig.color.blue, 5);
+            ledConfigBuffer.writeUInt16LE(zoneLedConfig.timePerPixel, 6);
+            ledConfigBuffer.writeUInt8(zoneLedConfig.hitPattern, 8);
+            ledConfigBuffer.writeUInt8(zoneLedConfig.hitColor.red, 9);
+            ledConfigBuffer.writeUInt8(zoneLedConfig.hitColor.green, 10);
+            ledConfigBuffer.writeUInt8(zoneLedConfig.hitColor.blue, 11);
+            ledConfigBuffer.writeUInt16LE(zoneLedConfig.hitBlinkTime, 12);
+            ledConfigBuffer.writeUInt16LE(zoneLedConfig.hitTimePerPixel, 14);
+
+            ledConfigCharacteristic.write(ledConfigBuffer, false, writeError => {
+              logger.info(`setting led configuration to ${ledConfigBuffer.toString('hex')}`);
+              if (writeError) {
+                logger.error(`Couldn't set led configurtion because: ${writeError}`);
+              }
+              this.disconnect();
+            });
+          }
+
+          logger.info(`finished setting led configuration for ${this.peripheral.address}`);
+        }
+      );
+    });
+  }
+
+  public async setGameStatus(gameStatus: number) {
+    logger.info(`Connecting to peripheral: ${this.peripheral.address}`);
+
+    this.peripheral.connect(error => {
+      if (error) {
+        logger.error(`Couldn't connect to peripheral because: ${error}`);
+      }
+      logger.info(`Connected to peripheral: ${this.peripheral.address}`);
+      this.peripheral.discoverSomeServicesAndCharacteristics(
+        [GAME_SERVICE_UUID],
+        [GAME_SERVICE_GAME_STATUS_CHAR_UUID],
+        (discoverError, services, characteristics) => {
+          if (discoverError) {
+            logger.error(`Failed to discover characteristic because: ${error}`);
+          }
+          logger.info(`discovered game service: ${services[0].uuid}`);
+
+          const gameStatusCharacteristic = characteristics[0];
+          const gameStatusBuffer = new Buffer(1);
+
+          gameStatusBuffer.writeUInt8(gameStatus, 0);
+          gameStatusCharacteristic.write(gameStatusBuffer, false, writeError => {
+            logger.info(`toggle gameStatus to ${gameStatus}`);
+            if (error) {
+              logger.error(`Couldn't toggle gameStatus because: ${error}`);
+            }
+            this.disconnect();
           });
-        });
 
-        logger.info(`finished toggling for ${peripheral.address}`);
+          logger.info(`finished toggling for ${this.peripheral.address}`);
+        }
+      );
+    });
+  }
+
+  public hitData(): IHit {
+    const data = { zone1: 0, zone2: 0, zone3: 0 };
+    data.zone1 = this.data.zone1;
+    data.zone2 = this.data.zone2;
+    data.zone3 = this.data.zone3;
+
+    return data;
+  }
+
+  public parseAdvertisement() {
+    const manufacturerData = this.peripheral.advertisement.manufacturerData;
+
+    this.active = !!manufacturerData.readUInt8(0);
+    this.batteryLevel = manufacturerData.readUInt8(1);
+
+    this.data.zone1 = manufacturerData.readUInt16LE(2);
+    this.data.zone2 = manufacturerData.readUInt16LE(4);
+    this.data.zone3 = manufacturerData.readUInt16LE(6);
+  }
+
+  private disconnect() {
+    this.peripheral.disconnect(() => {
+      logger.info(`Disconnected from ${this.peripheral.address}`);
+    });
+  }
+}
+
+@Service()
+export class HitTrackerDeviceManager {
+  private allowDuplicates = true;
+  private comparisonData: Map<string, number[]> = new Map<string, number[]>();
+  private scanTimeOut: number;
+  private seenPeripherals: DeviceMap = new Map<string, HitTrackerDevice>();
+  private baseUrl: string;
+
+  constructor(baseUrl: string, scanTimeOut: number = 5000, allowDuplicates = true) {
+    this.baseUrl = baseUrl;
+    this.allowDuplicates = allowDuplicates;
+    this.allowDuplicates = false;
+    this.scanTimeOut = scanTimeOut;
+
+    setInterval(this.removeMissingDevices.bind(this), 2000);
+  }
+
+  public resetComparisonData(address: string) {
+    if (!this.comparisonData.has(address)) {
+      this.comparisonData.set(address, [0, 0, 0]);
+    }
+  }
+
+  public setupNoble() {
+    logger.info('Setting up Noble');
+    noble.on('stateChange', state => {
+      logger.info(`State Changed to: ${state}`);
+      if (state === 'poweredOn') {
+        this.startScanning();
+      } else {
+        this.stopScanning();
       }
-    );
-  });
-};
+    });
 
-export const setPeripheralValue = async (address: string, value: number) => {
-
-  if (!seenPeripheralAddress(address)) {
-    logger.warn(`We haven't seen ${address}, so we can't set a value on the peripheral`);
-    return;
+    noble.on('discover', this.discoverPeripherals.bind(this));
+    noble.on('warning', (warning: string) => {
+      logger.warn(`NOBLE WARNING: ${warning}`);
+    });
   }
 
-  const peripheral = seenPeripherals[address];
-  await setPeripheralGameStatus(peripheral, value);
-  valuesToSend[address] = { zone1: 0, zone2: 0 };
-  if (value === 0) {
-    _.remove(activePeripherals, removeAddress => removeAddress === address);
-  } else {
-    activePeripherals.push(address);
+  public startScanning() {
+    logger.info('Start Scan');
+    noble.startScanning([GAME_SERVICE_UUID], this.allowDuplicates);
   }
-};
 
+  public stopScanning() {
+    logger.info('Stop Scan');
+    noble.stopScanning();
+  }
+  public addresses() {
+    return Array.from(this.seenPeripherals.keys());
+  }
 
-export const stopGame = async (gameConfiguration: util.GameConfiguration) => {
-  stopScanning();
-  const stopPeripherals = activePeripherals ? gameConfiguration.radioIds : [];
-  logger.info(`Stopping game for peripherals: ${JSON.stringify(stopPeripherals)}`);
-  stopPeripherals.forEach(async address => {
-    if (seenPeripherals.hasOwnProperty(address)) {
-      try {
-        await setPeripheralValue(address, 0);
-      } catch (error) {
-        logger.error(`Failed to stop game because: ${error}`);
+  public hasDevice(address: string): boolean {
+    return this.addresses().includes(address);
+  }
+
+  public getDevice(address: string): HitTrackerDevice {
+    return this.seenPeripherals.get(address)!;
+  }
+
+  public async stopGame(gameConfiguration: util.GameConfiguration) {
+    this.stopScanning();
+    const stopPeripherals = this.addresses() ? gameConfiguration.radioIds : [];
+    logger.info(`Stopping game for peripherals: ${JSON.stringify(stopPeripherals)}`);
+    stopPeripherals.forEach(async address => {
+      this.resetComparisonData(address);
+      if (this.hasDevice(address)) {
+        try {
+          await this.getDevice(address).setGameStatus(0);
+        } catch (error) {
+          logger.error(`Failed to stop game because: ${error}`);
+        }
       }
-    }
-  });
-  setTimeout(() => {
-    startScanning();
-  }, startScanningTimeOut);
-
-  activePeripherals = [];
-};
-
-export const startGame = async (gameConfiguration: util.GameConfiguration) => {
-  logger.info('Starting Game');
-  stopScanning();
-  const ourPeripherals = util.intersection(Object.keys(seenPeripherals), gameConfiguration.radioIds);
-
-  const chunkedPeripheralAddresses = _.chunk(ourPeripherals, 3);
-  for (const peripheralAddressGroup of chunkedPeripheralAddresses) {
-    const promiseGroup = [];
-    for (const address of peripheralAddressGroup) {
-        promiseGroup.push(setPeripheralValue(address, 1));
-    }
-    Promise.resolve(promiseGroup);
+    });
+    setTimeout(() => {
+      this.startScanning();
+    }, this.scanTimeOut);
   }
-  setTimeout(() => {
-    startScanning();
-  }, startScanningTimeOut);
-};
 
-const discoverPeripherals = (peripheral: noble.Peripheral) => {
-  const localName = peripheral.advertisement.localName;
-  const address = peripheral.address;
+  public async startGame(gameConfiguration: util.GameConfiguration) {
+    logger.info('Starting Game');
+    this.stopScanning();
+    const ourPeripherals = util.intersection(this.addresses(), gameConfiguration.radioIds);
 
-  if (!seenPeripherals[address]) {
-    seenPeripherals[address] = peripheral;
-    valuesToSend[address] = { zone1: 0, zone2: 0 };
-  }
-  if (peripheral.advertisement.manufacturerData) {
-    const manufacturerData = peripheral.advertisement.manufacturerData;
-    const hitSection = manufacturerData.slice(1);
-    const data = {
-      zone1: hitSection.readUInt16LE(0),
-      zone2: hitSection.readUInt16BE(1),
-    };
-
-    logger.debug(`[${address}] RSSI ${peripheral.rssi} NAME: ${localName} DATA: ${JSON.stringify(data)}`);
-    if (valuesToSend[address].zone1 < data.zone1) {
-      util.sendRequest(webAppUrl, address, 1);
-    }
-    if (valuesToSend[address].zone2 < data.zone2) {
-      util.sendRequest(webAppUrl, address, 2);
+    const chunkedPeripheralAddresses = _.chunk(ourPeripherals, 3);
+    for (const peripheralAddressGroup of chunkedPeripheralAddresses) {
+      const promiseGroup = [];
+      for (const address of peripheralAddressGroup) {
+        if (this.hasDevice(address)) {
+          promiseGroup.push(this.getDevice(address).setGameStatus(1));
+        }
+      }
+      Promise.resolve(promiseGroup);
     }
 
-    valuesToSend[address] = data;
+    setTimeout(() => {
+      this.startScanning();
+    }, this.scanTimeOut);
   }
-  /*if (peripheral.advertisement.txPowerLevel !== undefined) {
-        log('\tmy TX power level is:');
-        log(`\t\t'${peripheral.advertisement.txPowerLevel}`);
-    }*/
-};
 
-export const setupNoble = async () => {
-  logger.info('Setting up Noble');
-  noble.on('stateChange', state => {
-    logger.info(`State Changed to: ${state}`);
-    if (state === 'poweredOn') {
-      startScanning();
+  private discoverPeripherals(peripheral: noble.Peripheral) {
+    const localName = peripheral.advertisement.localName;
+    const address = peripheral.address;
+
+    let device;
+    if (!this.hasDevice(address)) {
+      device = new HitTrackerDevice(peripheral);
+      this.seenPeripherals.set(address, device);
+      this.resetComparisonData(address);
+      logger.debug(`[${address}] NAME: ${localName}`);
     } else {
-      stopScanning();
+      device = this.getDevice(address);
+      device.lastSeen = Date.now();
+      logger.debug(`[${address}] RSSI ${peripheral.rssi} GAME ACTIVE: ${device.active}`);
     }
-  });
+    device.parseAdvertisement();
 
-  noble.on('discover', discoverPeripherals);
-  noble.on('warning', (warning: string) => {
-    logger.warn(`NOBLE WARNING: ${warning}`);
-  });
-};
+    const data = device.hitData();
 
+    logger.debug(`[${address}] DATA: ${JSON.stringify(data)}`);
+    if (this.comparisonData.get(address)![0] < data.zone1) {
+      util.sendRequest(this.baseUrl, address, 1);
+    }
+    if (this.comparisonData.get(address)![1] < data.zone2) {
+      util.sendRequest(this.baseUrl, address, 2);
+    }
+
+    if (this.comparisonData.get(address)![2] < data.zone3) {
+      util.sendRequest(this.baseUrl, address, 3);
+    }
+
+    this.comparisonData.set(address, [data.zone1, data.zone2, data.zone3]);
+  }
+
+  private removeMissingDevices() {
+    for (const [address, device] of this.seenPeripherals) {
+      if (Date.now() - device.lastSeen > 60000) {
+        logger.debug(`[${address}] went away`);
+        this.seenPeripherals.delete(address);
+      }
+    }
+  }
+}
