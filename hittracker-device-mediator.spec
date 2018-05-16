@@ -20,7 +20,7 @@ BuildRequires:  python2
 BuildRequires:  systemd-devel
 BuildRequires:  libusb-devel
 BuildRequires:  bluez-libs-devel
-BuildRequires:  yarn
+BuildRequires:  npm
 
 Requires:       nodejs >= 8
 Requires:       bluez
@@ -36,10 +36,8 @@ Requires(postun): systemd
 %autosetup
 
 %build
-export PATH="$PATH:$HOME/.yarn"
-yarn config set prefix ~/.yarn
-yarn global add node-gyp
-yarn install
+npm install node-gyp
+npm install
 
 %install
 
