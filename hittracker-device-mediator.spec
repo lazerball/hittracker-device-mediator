@@ -15,6 +15,7 @@ Source0:        https://github.com/lazerball/%{name}/archive/%{version}/%{name}-
 Source1:        preserve-gatt-structure.patch
 
 BuildRequires:  nodejs >= 8
+BuildRequires:  git
 BuildRequires:  systemd
 BuildRequires:  python2
 BuildRequires:  systemd-devel
