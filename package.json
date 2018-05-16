@@ -30,6 +30,7 @@
     "koa-router": "^7.4.0",
     "lodash": "^4.17.5",
     "noble": "^1.9.1",
+    "prettier": "^1.12.1",
     "reflect-metadata": "^0.1.12",
     "routing-controllers": "^0.7.7",
     "tslint-language-service": "^0.9.9",
