@@ -197,7 +197,6 @@ export class HitTrackerDeviceManager {
   constructor(baseUrl: string, scanTimeOut: number = 5000, allowDuplicates = true) {
     this.baseUrl = baseUrl;
     this.allowDuplicates = allowDuplicates;
-    this.allowDuplicates = false;
     this.scanTimeOut = scanTimeOut;
 
     setInterval(this.removeMissingDevices.bind(this), 2000);
