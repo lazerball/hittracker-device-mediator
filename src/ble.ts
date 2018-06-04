@@ -292,7 +292,7 @@ export class HitTrackerDeviceManager {
       device = new HitTrackerDevice(peripheral);
       this.seenPeripherals.set(address, device);
       this.resetComparisonData(address);
-      logger.debug(`[${address}] NAME: ${localName}`);
+      logger.debug(`[${address}] NAME: ${localName.trimRight()}`);
     } else {
       device = this.getDevice(address);
       device.lastSeen = Date.now();
