@@ -55,11 +55,6 @@ interface IGameConfig {
   ledConfigs: ILedZonesConfig;
 }
 
-export interface IHit {
-  zone1: number;
-  zone2: number;
-  zone3: number;
-}
 export class HitTrackerDevice {
   public txPowerLevel = 0;
   public batteryLevel = 100;
@@ -68,7 +63,7 @@ export class HitTrackerDevice {
   public lastSeen: number;
   private peripheral: noble.Peripheral;
 
-  private data: IHit = { zone1: 0, zone2: 0, zone3: 0 };
+  private zoneHits: number[] = [0, 0, 0];
 
   constructor(peripheral: noble.Peripheral) {
     this.peripheral = peripheral;
@@ -159,13 +154,8 @@ export class HitTrackerDevice {
     });
   }
 
-  public hitData(): IHit {
-    const data = { zone1: 0, zone2: 0, zone3: 0 };
-    data.zone1 = this.data.zone1;
-    data.zone2 = this.data.zone2;
-    data.zone3 = this.data.zone3;
-
-    return data;
+  public hitData(): number[] {
+    return this.zoneHits;
   }
 
   public parseAdvertisement() {
@@ -174,9 +164,9 @@ export class HitTrackerDevice {
     this.active = !!manufacturerData.readUInt8(0);
     this.batteryLevel = manufacturerData.readUInt8(1);
 
-    this.data.zone1 = manufacturerData.readUInt16LE(2);
-    this.data.zone2 = manufacturerData.readUInt16LE(4);
-    this.data.zone3 = manufacturerData.readUInt16LE(6);
+    this.zoneHits[0] = manufacturerData.readUInt16LE(2);
+    this.zoneHits[1] = manufacturerData.readUInt16LE(4);
+    this.zoneHits[2] = manufacturerData.readUInt16LE(6);
   }
 
   private disconnect() {
@@ -303,21 +293,20 @@ export class HitTrackerDeviceManager {
     }
     device.parseAdvertisement();
 
-    const data = device.hitData();
+    const zoneHits = device.hitData();
 
-    logger.debug(`[${address}] DATA: ${JSON.stringify(data)}`);
-    if (this.comparisonData.get(address)![0] < data.zone1) {
+    logger.debug(`[${address}] DATA: ${JSON.stringify(zoneHits)}`);
+    if (this.comparisonData.get(address)![0] < zoneHits[0]) {
       util.sendRequest(this.baseUrl, address, 1);
     }
-    if (this.comparisonData.get(address)![1] < data.zone2) {
+    if (this.comparisonData.get(address)![1] < zoneHits[1]) {
       util.sendRequest(this.baseUrl, address, 2);
     }
 
-    if (this.comparisonData.get(address)![2] < data.zone3) {
+    if (this.comparisonData.get(address)![2] < zoneHits[2]) {
       util.sendRequest(this.baseUrl, address, 3);
     }
-
-    this.comparisonData.set(address, [data.zone1, data.zone2, data.zone3]);
+    this.comparisonData.set(address, zoneHits);
   }
 
   private removeMissingDevices() {
