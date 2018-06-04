@@ -84,7 +84,7 @@ export class HitTrackerDevice {
         [GAME_SERVICE_LED_CONFIGURE_CHAR_UUID],
         (discoverError, services, characteristics) => {
           if (discoverError) {
-            logger.error(`Failed to discover characteristic because: ${error}`);
+            logger.error(`Failed to discover characteristic because: ${discoverError}`);
           }
           const ledConfigCharacteristic = characteristics[0];
 
