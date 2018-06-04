@@ -195,6 +195,7 @@ export class HitTrackerDeviceManager {
     this.allowDuplicates = allowDuplicates;
     this.scanTimeOut = scanTimeOut;
 
+    setInterval(this.restartScanning.bind(this), 100000);
     setInterval(this.removeMissingDevices.bind(this), 2000);
   }
 
@@ -322,5 +323,10 @@ export class HitTrackerDeviceManager {
         this.seenPeripherals.delete(address);
       }
     }
+  }
+  private restartScanning() {
+    logger.debug('Restart Scanning');
+    this.stopScanning();
+    this.startScanning();
   }
 }
