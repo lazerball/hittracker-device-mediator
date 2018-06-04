@@ -161,6 +161,12 @@ export class HitTrackerDevice {
   public parseAdvertisement() {
     const manufacturerData = this.peripheral.advertisement.manufacturerData;
 
+    // sometimes manufacturerData is in fact not defined even though the type says so
+    // tslint:disable-next-line: strict-type-predicates
+    if (manufacturerData === undefined) {
+      logger.error(`[${this.peripheral.address}] Couldn't find manufacturerData`);
+      return;
+    }
     this.active = !!manufacturerData.readUInt8(0);
     this.batteryLevel = manufacturerData.readUInt8(1);
 
