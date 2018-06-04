@@ -1,7 +1,7 @@
 import * as _ from 'lodash';
 import * as noble from 'noble';
 import { logger } from './logging';
-import * as util from './util';
+import * as hdmUtil from './util';
 
 import { Service } from 'typedi';
 
@@ -243,7 +243,7 @@ export class HitTrackerDeviceManager {
     return this.seenPeripherals.get(address)!;
   }
 
-  public async stopGame(gameConfiguration: util.GameConfiguration) {
+  public async stopGame(gameConfiguration: hdmUtil.GameConfiguration) {
     this.stopScanning();
     const stopPeripherals = this.addresses() ? gameConfiguration.radioIds : [];
     logger.info(`Stopping game for peripherals: ${JSON.stringify(stopPeripherals)}`);
@@ -262,10 +262,10 @@ export class HitTrackerDeviceManager {
     }, this.scanTimeOut);
   }
 
-  public async startGame(gameConfiguration: util.GameConfiguration) {
+  public async startGame(gameConfiguration: hdmUtil.GameConfiguration) {
     logger.info('Starting Game');
     this.stopScanning();
-    const ourPeripherals = util.intersection(this.addresses(), gameConfiguration.radioIds);
+    const ourPeripherals = hdmUtil.intersection(this.addresses(), gameConfiguration.radioIds);
 
     const chunkedPeripheralAddresses = _.chunk(ourPeripherals, 3);
     for (const peripheralAddressGroup of chunkedPeripheralAddresses) {
@@ -304,14 +304,14 @@ export class HitTrackerDeviceManager {
 
     logger.debug(`[${address}] DATA: ${JSON.stringify(zoneHits)}`);
     if (this.comparisonData.get(address)![0] < zoneHits[0]) {
-      util.sendRequest(this.baseUrl, address, 1);
+      hdmUtil.sendRequest(this.baseUrl, address, 1);
     }
     if (this.comparisonData.get(address)![1] < zoneHits[1]) {
-      util.sendRequest(this.baseUrl, address, 2);
+      hdmUtil.sendRequest(this.baseUrl, address, 2);
     }
 
     if (this.comparisonData.get(address)![2] < zoneHits[2]) {
-      util.sendRequest(this.baseUrl, address, 3);
+      hdmUtil.sendRequest(this.baseUrl, address, 3);
     }
     this.comparisonData.set(address, zoneHits);
   }
