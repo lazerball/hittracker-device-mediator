@@ -38,7 +38,6 @@
     "winston": "^2.4.2"
   },
   "devDependencies": {
-    "@types/noble": "^0.0.37",
     "ts-node": "^6.0",
     "tslint": "^5.10.0",
     "tslint-config-prettier": "^1.13.0",
