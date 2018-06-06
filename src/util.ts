@@ -11,7 +11,7 @@ export const intersection = (a: any[], b: any[]): any[] => {
   return [...first].filter(x => second.has(x));
 };
 
-const getHttpInstance = (url: string) => {
+const getHttpInstance = async (url: string) => {
   return axios.create({
     baseURL: url,
     headers: {
@@ -25,7 +25,7 @@ const getHttpInstance = (url: string) => {
 
 export const sendRequest = async (url: string, radioId: string, zone: number) => {
   logger.info(`Sending Request to ${url} for ${radioId}:${zone}`);
-  const http = getHttpInstance(url);
+  const http = await getHttpInstance(url);
 
   const data = {
     events: [
@@ -37,9 +37,10 @@ export const sendRequest = async (url: string, radioId: string, zone: number) =>
     ],
   };
   try {
-    await http.post('/games/hit', JSON.stringify(data));
+    const response = await http.post('/games/hit', JSON.stringify(data));
+    logger.info(response.data);
   } catch (e) {
-    logger.error(e);
+    logger.error(e.response);
   }
 };
 
