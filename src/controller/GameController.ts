@@ -1,19 +1,18 @@
 import { Body, ContentType, Get, JsonController, NotFoundError, Param, Post } from 'routing-controllers';
 
-import {HitTrackerDeviceManager }  from '../ble';
+import { HitTrackerDeviceManager } from '../ble';
 import { GameConfiguration } from '../util';
 
 import { logger } from '../logging';
 
-import {Inject} from "typedi";
+import { Inject } from 'typedi';
 
 @JsonController()
 export class GameController {
   private gameTimer!: NodeJS.Timer;
   private deviceManager: HitTrackerDeviceManager;
 
-  constructor(@Inject('device-manager') deviceManager: HitTrackerDeviceManager)
-  {
+  constructor(@Inject('device-manager') deviceManager: HitTrackerDeviceManager) {
     this.deviceManager = deviceManager;
   }
   @Post('/start')
@@ -29,9 +28,13 @@ export class GameController {
       logger.error(error);
     }
 
-    this.gameTimer = setTimeout(async (config: GameConfiguration) => {
-      await this.deviceManager.stopGame(config);
-    }, gameConfiguration.gameLength * 1000, gameConfiguration);
+    this.gameTimer = setTimeout(
+      async (config: GameConfiguration) => {
+        await this.deviceManager.stopGame(config);
+      },
+      gameConfiguration.gameLength * 1000,
+      gameConfiguration
+    );
 
     return { msg: 'Started Game' };
   }
