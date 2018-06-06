@@ -1,7 +1,9 @@
 import axios from 'axios';
 import * as https from 'https';
+import * as util from 'util';
 import {logger} from './logging';
 
+export const setTimeOutAync = util.promisify(setTimeout);
 // Intersection (a ∩ b): create a set that contains those elements of set a that are also in set b.
 export const intersection = (a: any[], b: any[]): any[] => {
   const first = new Set(a);
