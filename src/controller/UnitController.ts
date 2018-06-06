@@ -31,9 +31,7 @@ export class UnitController {
       await this.deviceManager.stopScanning();
 
       await this.deviceManager.getDevice(address).setLedConfiguration(ledZoneConfigs);
-      this.timer = setTimeout(async () => {
-        await this.deviceManager.startScanning();
-      }, 3000);
+      await this.deviceManager.startScanning();
     } catch (error) {
       logger.error(error);
     }
@@ -54,9 +52,8 @@ export class UnitController {
     try {
       await this.deviceManager.stopScanning();
       await this.deviceManager.getDevice(address).setGameStatus(value);
-      this.timer = setTimeout(async () => {
-        await this.deviceManager.startScanning();
-      }, 3000);
+
+      await this.deviceManager.startScanning();
     } catch (error) {
       logger.error(error);
     }
