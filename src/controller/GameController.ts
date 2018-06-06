@@ -29,8 +29,8 @@ export class GameController {
       logger.error(error);
     }
 
-    this.gameTimer = setTimeout((config: GameConfiguration) => {
-      this.deviceManager.stopGame(config);
+    this.gameTimer = setTimeout(async (config: GameConfiguration) => {
+      await this.deviceManager.stopGame(config);
     }, gameConfiguration.gameLength * 1000, gameConfiguration);
 
     return { msg: 'Started Game' };

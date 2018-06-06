@@ -28,11 +28,11 @@ export class UnitController {
     }
     logger.debug(`Setting unit ${address} LED configuration  to ${JSON.stringify(ledZoneConfigs)}`);
     try {
-      this.deviceManager.stopScanning();
+      await this.deviceManager.stopScanning();
 
       await this.deviceManager.getDevice(address).setLedConfiguration(ledZoneConfigs);
-      this.timer = setTimeout(() => {
-        this.deviceManager.startScanning();
+      this.timer = setTimeout(async () => {
+        await this.deviceManager.startScanning();
       }, 3000);
     } catch (error) {
       logger.error(error);
@@ -52,10 +52,10 @@ export class UnitController {
     }
     logger.debug(`Setting unit ${address} status to ${value}`);
     try {
-      this.deviceManager.stopScanning();
+      await this.deviceManager.stopScanning();
       await this.deviceManager.getDevice(address).setGameStatus(value);
-      this.timer = setTimeout(() => {
-        this.deviceManager.startScanning();
+      this.timer = setTimeout(async () => {
+        await this.deviceManager.startScanning();
       }, 3000);
     } catch (error) {
       logger.error(error);
