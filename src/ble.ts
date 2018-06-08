@@ -244,7 +244,7 @@ export class HitTrackerDeviceManager {
         }
       }
     });
-    await hdmUtil.setTimeOutAync(this.scanTimeOut);
+    await hdmUtil.setTimeOutAsync(this.scanTimeOut);
     await this.startScanning();
   }
 
@@ -264,7 +264,7 @@ export class HitTrackerDeviceManager {
       Promise.resolve(promiseGroup);
     }
 
-    await hdmUtil.setTimeOutAync(this.scanTimeOut);
+    await hdmUtil.setTimeOutAsync(this.scanTimeOut);
     await this.startScanning();
   }
 
