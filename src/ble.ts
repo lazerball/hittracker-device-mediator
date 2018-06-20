@@ -288,16 +288,12 @@ export class HitTrackerDeviceManager {
     const zoneHits = device.hitData();
 
     logger.debug(`[${address}] DATA: ${JSON.stringify(zoneHits)}`);
-    if (this.comparisonData.get(address)![0] < zoneHits[0]) {
-      hdmUtil.sendRequest(this.baseUrl, address, 1);
-    }
-    if (this.comparisonData.get(address)![1] < zoneHits[1]) {
-      hdmUtil.sendRequest(this.baseUrl, address, 2);
+    for (let zone = 0; zone < zoneHits.length; zone++) {
+      if (this.comparisonData.get(address)![zone] < zoneHits[zone]) {
+        hdmUtil.sendRequest(this.baseUrl, address, zone + 1).catch(logger.error);
+      }
     }
 
-    if (this.comparisonData.get(address)![2] < zoneHits[2]) {
-      hdmUtil.sendRequest(this.baseUrl, address, 3);
-    }
     this.comparisonData.set(address, zoneHits);
   }
 
