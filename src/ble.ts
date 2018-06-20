@@ -152,11 +152,11 @@ export class HitTrackerDevice {
   }
 
   private async connect() {
-    await this.peripheral.connect();
+    return this.peripheral.connect();
     logger.info(`Connected to peripheral: ${this.peripheral.address}`);
   }
   private async disconnect() {
-    await this.peripheral.disconnect();
+    return this.peripheral.disconnect();
     logger.info(`Disconnected from ${this.peripheral.address}`);
   }
 }
@@ -261,7 +261,7 @@ export class HitTrackerDeviceManager {
           promiseGroup.push(this.getDevice(address).setGameStatus(1));
         }
       }
-      Promise.resolve(promiseGroup);
+      await Promise.resolve(promiseGroup);
     }
 
     await hdmUtil.setTimeOutAsync(this.scanTimeOut);
