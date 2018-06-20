@@ -26,7 +26,9 @@ if (program.verbose) {
   logger.transports.console.level = 'debug';
 }
 
-process.env.NOBLE_HCI_DEVICE_ID = program.hciDevice.replace('hci', '');
+if (process.env.NOBLE_HCI_DEVICE_ID !== undefined) {
+  process.env.NOBLE_HCI_DEVICE_ID = program.hciDevice.replace('hci', '');
+}
 
 const deviceManager = new HitTrackerDeviceManager(program.hitUrl);
 deviceManager.setupNoble();
