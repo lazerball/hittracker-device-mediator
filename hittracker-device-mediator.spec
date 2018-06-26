@@ -4,14 +4,14 @@
 %global debug_package %{nil}
 
 Name:           hittracker-device-mediator
-Version:        0.2.0
+Version:        1.0.0
 Release:        1%{?dist}
 Summary:        None
 
 Group:          Applications/Internet
 License:        AGPL3
 URL:            https://github.com/lazerball/hittracker-device-mediator
-Source0:        https://github.com/lazerball/%{name}/archive/%{version}/%{name}-%{version}.tar.gz
+Source0:        https://github.com/lazerball/%{name}/archive/v%{version}/%{name}-%{version}.tar.gz
 Source1:        preserve-gatt-structure.patch
 
 BuildRequires:  nodejs >= 8
