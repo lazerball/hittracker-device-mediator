@@ -7,6 +7,7 @@
   "scripts": {
     "build": "tsc",
     "prepublishOnly": "tsc",
+    "lint": "tslint --project .",
     "run": "ts-node ./src/index.ts",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
