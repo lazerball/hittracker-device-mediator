@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+import * as path from 'path';
+
 import * as program from 'commander';
 import * as KoaLoggerWinston from 'koa-logger-winston';
 import { logger } from './logging';
@@ -36,8 +38,10 @@ deviceManager.setupNoble();
 useContainer(Container);
 Container.set('device-manager', deviceManager);
 
+const ext = path.extname(__filename);
+
 const app = createKoaServer({
-  controllers: [`${__dirname}/controller/*.ts`],
+  controllers: [`${__dirname}/controller/*${ext}`],
 });
 
 app.use(KoaLoggerWinston(logger));
