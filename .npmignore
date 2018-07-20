@@ -1,6 +1,7 @@
 src/
 types/
 node_modules/
+systemcfg/
 npm-shrinkwrap.json
 tsconfig.json
 /*.spec
