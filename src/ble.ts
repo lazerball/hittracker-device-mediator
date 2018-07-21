@@ -168,6 +168,7 @@ export class HitTrackerDeviceManager {
   private scanTimeOut: number;
   private seenPeripherals: DeviceMap = new Map<string, HitTrackerDevice>();
   private baseUrl: string;
+  private isScanning = false;
 
   constructor(baseUrl: string, scanTimeOut: number = 5000, allowDuplicates = true) {
     this.baseUrl = baseUrl;
@@ -196,12 +197,22 @@ export class HitTrackerDeviceManager {
     });
 
     noble.on('discover', this.discoverPeripherals.bind(this));
+
+    noble.on('scanStart', () => {
+      this.isScanning = true;
+    });
+    noble.on('scanStop', () => {
+      this.isScanning = false;
+    });
     noble.on('warning', (warning: string) => {
       logger.warn(`NOBLE WARNING: ${warning}`);
     });
   }
 
   public async startScanning() {
+    if (this.isScanning === true) {
+      return;
+    }
     logger.info('Start Scan');
     try {
       await noble.startScanning([GAME_SERVICE_UUID], this.allowDuplicates);
@@ -212,6 +223,9 @@ export class HitTrackerDeviceManager {
 
   public async stopScanning() {
     logger.info('Stop Scan');
+    if (this.isScanning === false) {
+      return;
+    }
     try {
       await noble.stopScanning();
     } catch (e) {
