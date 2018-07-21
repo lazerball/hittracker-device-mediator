@@ -120,7 +120,7 @@ export class HitTrackerDevice {
     logger.info(`discovered game service: ${services[0].uuid}`);
     const gameStatusCharacteristic = characteristics[0];
 
-    const gameStatusBuffer = new Buffer(1);
+    const gameStatusBuffer = Buffer.alloc(1);
     gameStatusBuffer.writeUInt8(gameStatus, 0);
 
     await gameStatusCharacteristic.write(gameStatusBuffer, false);
