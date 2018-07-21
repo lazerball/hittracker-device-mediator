@@ -151,11 +151,25 @@ export class HitTrackerDevice {
     this.zoneHits[2] = manufacturerData.readUInt16LE(6);
   }
 
+  private isConnected(): boolean
+  {
+    const state = this.peripheral.state;
+
+    return state === 'connected' || state === 'connecting';
+  }
+
   private async connect() {
+    if (this.isConnected()) {
+      return;
+    }
     return this.peripheral.connect();
     logger.info(`Connected to peripheral: ${this.peripheral.address}`);
+
   }
   private async disconnect() {
+    if (!this.isConnected()) {
+      return;
+    }
     return this.peripheral.disconnect();
     logger.info(`Disconnected from ${this.peripheral.address}`);
   }
