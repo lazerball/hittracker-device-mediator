@@ -62,13 +62,15 @@ export class HitTrackerDevice {
   public lastSeen: number;
   private peripheral: noble.Peripheral;
 
-  private zoneHits: number[] = [0, 0, 0];
-  private lastHit: number[] = [0, 0, 0];
+  private zoneHits: number[];
+  private lastHit: number[];
 
-  constructor(peripheral: noble.Peripheral) {
+  constructor(peripheral: noble.Peripheral, zoneCount = 2) {
     this.peripheral = peripheral;
     this.txPowerLevel = this.peripheral.advertisement.txPowerLevel;
     this.lastSeen = Date.now();
+    this.zoneHits = new Array(zoneCount).fill(0);
+    this.lastHit = new Array(zoneCount).fill(0);
   }
 
   public async setLedConfiguration(ledConfig: ILedZonesConfig) {
@@ -125,12 +127,10 @@ export class HitTrackerDevice {
     await gameStatusCharacteristic.write(gameStatusBuffer, false);
     logger.info(`toggle gameStatus to ${gameStatus}`);
     await this.disconnect();
-    this.lastHit = [0, 0, 0];
-    this.zoneHits = [0, 0, 0];
+    this.resetZoneHits();
 
     logger.info(`finished toggling for ${this.peripheral.address}`);
   }
-
 
   public zonesHit(): number[] {
     const hits = [];
@@ -160,8 +160,12 @@ export class HitTrackerDevice {
     this.zoneHits[2] = manufacturerData.readUInt16LE(6);
   }
 
-  private isConnected(): boolean
-  {
+  private resetZoneHits() {
+    this.zoneHits = new Array(this.zoneHits.length).fill(0);
+    this.lastHit = new Array(this.lastHit.length).fill(0);
+  }
+
+  private isConnected(): boolean {
     const state = this.peripheral.state;
 
     return state === 'connected' || state === 'connecting';
