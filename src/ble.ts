@@ -10,8 +10,6 @@ const GAME_SERVICE_UUID = 'a800';
 const GAME_SERVICE_GAME_STATUS_CHAR_UUID = 'a801';
 const GAME_SERVICE_LED_CONFIGURE_CHAR_UUID = 'a803';
 
-let scanWhileConnecting = false;
-
 type DeviceMap = Map<string, HitTrackerDevice>;
 
 export enum GameTypes {
@@ -202,7 +200,6 @@ export class HitTrackerDeviceManager {
     setInterval(this.restartScanning.bind(this), 600000);
     setInterval(this.removeMissingDevices.bind(this), 2000);
   }
-
 
   public setupNoble() {
     logger.info('Setting up Noble');
