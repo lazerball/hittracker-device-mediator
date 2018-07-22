@@ -30,6 +30,7 @@ export interface ILedColor {
   red: number;
   green: number;
   blue: number;
+  white?: number;
 }
 
 export interface ILedConfig {
@@ -85,21 +86,40 @@ export class HitTrackerDevice {
     const ledConfigCharacteristic = characteristics[0];
 
     for (const [zone, zoneLedConfig] of Object.entries(ledConfig.zones)) {
-      const ledConfigBuffer = Buffer.alloc(16);
-      ledConfigBuffer.writeUInt8(ledConfig.gameType, 0);
-      ledConfigBuffer.writeUInt8(parseInt(zone, 10), 1);
-      ledConfigBuffer.writeUInt8(zoneLedConfig.pattern, 2);
-      ledConfigBuffer.writeUInt8(zoneLedConfig.color.red, 3);
-      ledConfigBuffer.writeUInt8(zoneLedConfig.color.green, 4);
-      ledConfigBuffer.writeUInt8(zoneLedConfig.color.blue, 5);
-      ledConfigBuffer.writeUInt16LE(zoneLedConfig.timePerPixel, 6);
-      ledConfigBuffer.writeUInt8(zoneLedConfig.hitPattern, 8);
-      ledConfigBuffer.writeUInt8(zoneLedConfig.hitColor.red, 9);
-      ledConfigBuffer.writeUInt8(zoneLedConfig.hitColor.green, 10);
-      ledConfigBuffer.writeUInt8(zoneLedConfig.hitColor.blue, 11);
-      ledConfigBuffer.writeUInt16LE(zoneLedConfig.hitBlinkTime, 12);
-      ledConfigBuffer.writeUInt16LE(zoneLedConfig.hitTimePerPixel, 14);
-
+      let ledConfigBuffer;
+      if (typeof zoneLedConfig.color.white !== 'undefined' && typeof zoneLedConfig.hitColor.white !== 'undefined') {
+        ledConfigBuffer = Buffer.alloc(19);
+        ledConfigBuffer.writeUInt8(ledConfig.gameType, 0);
+        ledConfigBuffer.writeUInt8(parseInt(zone, 10), 1);
+        ledConfigBuffer.writeUInt8(zoneLedConfig.pattern, 2);
+        ledConfigBuffer.writeUInt8(zoneLedConfig.color.red, 3);
+        ledConfigBuffer.writeUInt8(zoneLedConfig.color.green, 4);
+        ledConfigBuffer.writeUInt8(zoneLedConfig.color.blue, 5);
+        ledConfigBuffer.writeUInt8(zoneLedConfig.color.white, 6);
+        ledConfigBuffer.writeUInt16LE(zoneLedConfig.timePerPixel, 7);
+        ledConfigBuffer.writeUInt8(zoneLedConfig.hitPattern, 9);
+        ledConfigBuffer.writeUInt8(zoneLedConfig.hitColor.red, 10);
+        ledConfigBuffer.writeUInt8(zoneLedConfig.hitColor.green, 11);
+        ledConfigBuffer.writeUInt8(zoneLedConfig.hitColor.blue, 12);
+        ledConfigBuffer.writeUInt8(zoneLedConfig.hitColor.white, 13);
+        ledConfigBuffer.writeUInt16LE(zoneLedConfig.hitBlinkTime, 14);
+        ledConfigBuffer.writeUInt16LE(zoneLedConfig.hitTimePerPixel, 16);
+      } else {
+        ledConfigBuffer = Buffer.alloc(15);
+        ledConfigBuffer.writeUInt8(ledConfig.gameType, 0);
+        ledConfigBuffer.writeUInt8(parseInt(zone, 10), 1);
+        ledConfigBuffer.writeUInt8(zoneLedConfig.pattern, 2);
+        ledConfigBuffer.writeUInt8(zoneLedConfig.color.red, 3);
+        ledConfigBuffer.writeUInt8(zoneLedConfig.color.green, 4);
+        ledConfigBuffer.writeUInt8(zoneLedConfig.color.blue, 5);
+        ledConfigBuffer.writeUInt16LE(zoneLedConfig.timePerPixel, 6);
+        ledConfigBuffer.writeUInt8(zoneLedConfig.hitPattern, 8);
+        ledConfigBuffer.writeUInt8(zoneLedConfig.hitColor.red, 9);
+        ledConfigBuffer.writeUInt8(zoneLedConfig.hitColor.green, 10);
+        ledConfigBuffer.writeUInt8(zoneLedConfig.hitColor.blue, 11);
+        ledConfigBuffer.writeUInt16LE(zoneLedConfig.hitBlinkTime, 12);
+        ledConfigBuffer.writeUInt16LE(zoneLedConfig.hitTimePerPixel, 14);
+      }
       await ledConfigCharacteristic.write(ledConfigBuffer, false);
 
       logger.info(`setting led configuration to ${ledConfigBuffer.toString('hex')} for ${zone}`);
@@ -177,7 +197,6 @@ export class HitTrackerDevice {
     }
     return this.peripheral.connect();
     logger.info(`Connected to peripheral: ${this.peripheral.address}`);
-
   }
   private async disconnect() {
     if (!this.isConnected()) {
@@ -320,7 +339,7 @@ export class HitTrackerDeviceManager {
     logger.debug(`[${address}] DATA: ${JSON.stringify(device.zonesHit)}`);
 
     device.zonesHit().forEach((zone: number) => {
-        hdmUtil.sendRequest(this.baseUrl, address, zone + 1).catch(logger.error);
+      hdmUtil.sendRequest(this.baseUrl, address, zone + 1).catch(logger.error);
     });
   }
 
