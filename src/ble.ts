@@ -65,6 +65,7 @@ export class HitTrackerDevice {
   private peripheral: noble.Peripheral;
 
   private zoneHits: number[] = [0, 0, 0];
+  private lastHit: number[] = [0, 0, 0];
 
   constructor(peripheral: noble.Peripheral) {
     this.peripheral = peripheral;
@@ -126,15 +127,25 @@ export class HitTrackerDevice {
     await gameStatusCharacteristic.write(gameStatusBuffer, false);
     logger.info(`toggle gameStatus to ${gameStatus}`);
     await this.disconnect();
+    this.lastHit = [0, 0, 0];
+    this.zoneHits = [0, 0, 0];
 
     logger.info(`finished toggling for ${this.peripheral.address}`);
   }
 
-  public hitData(): number[] {
-    return this.zoneHits;
+
+  public zonesHit(): number[] {
+    const hits = [];
+    for (let zone = 0; zone < this.zoneHits.length; zone++) {
+      if (this.zoneHits[zone] > this.lastHit[zone]) {
+        hits.push(zone);
+      }
+    }
+    return hits;
   }
 
   public parseAdvertisement() {
+    this.lastHit = this.zoneHits.slice(0);
     const manufacturerData = this.peripheral.advertisement.manufacturerData;
 
     // sometimes manufacturerData is in fact not defined even though the type says so
@@ -178,7 +189,6 @@ export class HitTrackerDevice {
 @Service()
 export class HitTrackerDeviceManager {
   private allowDuplicates = true;
-  private comparisonData: Map<string, number[]> = new Map<string, number[]>();
   private scanTimeOut: number;
   private seenPeripherals: DeviceMap = new Map<string, HitTrackerDevice>();
   private baseUrl: string;
@@ -193,11 +203,6 @@ export class HitTrackerDeviceManager {
     setInterval(this.removeMissingDevices.bind(this), 2000);
   }
 
-  public resetComparisonData(address: string) {
-    if (!this.comparisonData.has(address)) {
-      this.comparisonData.set(address, [0, 0, 0]);
-    }
-  }
 
   public setupNoble() {
     logger.info('Setting up Noble');
@@ -263,7 +268,6 @@ export class HitTrackerDeviceManager {
     const stopPeripherals = this.addresses() ? gameConfiguration.radioIds : [];
     logger.info(`Stopping game for peripherals: ${JSON.stringify(stopPeripherals)}`);
     stopPeripherals.forEach(async address => {
-      this.resetComparisonData(address);
       if (this.hasDevice(address)) {
         try {
           await this.getDevice(address).setGameStatus(0);
@@ -304,7 +308,6 @@ export class HitTrackerDeviceManager {
     if (!this.hasDevice(address)) {
       device = new HitTrackerDevice(peripheral);
       this.seenPeripherals.set(address, device);
-      this.resetComparisonData(address);
       logger.debug(`[${address}] NAME: ${localName.trimRight()}`);
     } else {
       device = this.getDevice(address);
@@ -313,16 +316,11 @@ export class HitTrackerDeviceManager {
     }
     device.parseAdvertisement();
 
-    const zoneHits = device.hitData();
+    logger.debug(`[${address}] DATA: ${JSON.stringify(device.zonesHit)}`);
 
-    logger.debug(`[${address}] DATA: ${JSON.stringify(zoneHits)}`);
-    for (let zone = 0; zone < zoneHits.length; zone++) {
-      if (this.comparisonData.get(address)![zone] < zoneHits[zone]) {
+    device.zonesHit().forEach((zone: number) => {
         hdmUtil.sendRequest(this.baseUrl, address, zone + 1).catch(logger.error);
-      }
-    }
-
-    this.comparisonData.set(address, zoneHits);
+    });
   }
 
   private removeMissingDevices() {
