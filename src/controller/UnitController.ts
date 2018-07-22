@@ -58,6 +58,6 @@ export class UnitController {
   @Get('/unit')
   @ContentType('application/json')
   public async unitList() {
-    return this.deviceManager.addresses();
+    return this.deviceManager.allAddresses();
   }
 }

@@ -271,12 +271,12 @@ export class HitTrackerDeviceManager {
       logger.error(e);
     }
   }
-  public addresses() {
+  public allAddresses() {
     return Array.from(this.seenPeripherals.keys());
   }
 
   public hasDevice(address: string): boolean {
-    return this.addresses().includes(address);
+    return this.allAddresses().includes(address);
   }
 
   public getDevice(address: string): HitTrackerDevice {
@@ -285,7 +285,7 @@ export class HitTrackerDeviceManager {
 
   public async stopGame(gameConfiguration: hdmUtil.GameConfiguration) {
     await this.stopScanning();
-    const stopPeripherals = this.addresses() ? gameConfiguration.radioIds : [];
+    const stopPeripherals = this.allAddresses() ? gameConfiguration.radioIds : [];
     logger.info(`Stopping game for peripherals: ${JSON.stringify(stopPeripherals)}`);
     stopPeripherals.forEach(async address => {
       if (this.hasDevice(address)) {
@@ -303,7 +303,7 @@ export class HitTrackerDeviceManager {
   public async startGame(gameConfiguration: hdmUtil.GameConfiguration) {
     logger.info('Starting Game');
     await this.stopScanning();
-    const ourPeripherals = hdmUtil.intersection(this.addresses(), gameConfiguration.radioIds);
+    const ourPeripherals = hdmUtil.intersection(this.allAddresses(), gameConfiguration.radioIds);
 
     const chunkedPeripheralAddresses = _.chunk(ourPeripherals, 3);
     for (const peripheralAddressGroup of chunkedPeripheralAddresses) {
