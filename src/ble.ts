@@ -61,9 +61,9 @@ export class HitTrackerDevice {
 
   public active = false;
   public lastSeen: number;
+  public zoneHits: number[];
   private peripheral: noble.Peripheral;
 
-  private zoneHits: number[];
   private lastHit: number[];
 
   constructor(peripheral: noble.Peripheral, zoneCount = 2) {
@@ -336,7 +336,7 @@ export class HitTrackerDeviceManager {
     }
     device.parseAdvertisement();
 
-    logger.debug(`[${address}] DATA: ${JSON.stringify(device.zonesHit)}`);
+    logger.debug(`[${address}] DATA: ${JSON.stringify(device.zoneHits)}`);
 
     device.zonesHit().forEach((zone: number) => {
       hdmUtil.sendRequest(this.baseUrl, address, zone + 1).catch(logger.error);
