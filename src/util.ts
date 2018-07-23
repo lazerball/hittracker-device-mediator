@@ -49,8 +49,21 @@ export const sendRequest = async (url: string, radioId: string, zone: number) =>
   }
 };
 
+export type IlluminationStyle = 'rgb' | 'rgbw' | 'simple_led' | 'none';
+export class Unit {
+  public radioId: string;
+  public illuminationStyle: IlluminationStyle;
+  public zones: number;
+
+  constructor(radioId: string, zones = 2, illuminationStyle: IlluminationStyle = 'none') {
+    this.radioId = radioId;
+    this.illuminationStyle = illuminationStyle;
+    this.zones = zones;
+  }
+}
+
 export class GameConfiguration {
-  public radioIds: string[] = [];
+  public units: Unit[] = [];
   public gameLength: number = 0;
 }
 
