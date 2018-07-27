@@ -220,7 +220,9 @@ export class HitTrackerDeviceManager {
     this.allowDuplicates = allowDuplicates;
     this.scanTimeOut = scanTimeOut;
 
-    setInterval(this.restartScanning.bind(this), 600000);
+    if (process.platform !== 'win32') {
+      setInterval(this.restartScanning.bind(this), 600000);
+    }
     setInterval(this.removeMissingDevices.bind(this), 2000);
   }
 
