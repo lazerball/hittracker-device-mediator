@@ -1,6 +1,6 @@
 {
   "name": "@lazerball/hittracker-device-mediator",
-  "version": "1.1.17",
+  "version": "1.1.18",
   "description": "none",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
