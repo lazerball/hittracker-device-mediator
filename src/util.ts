@@ -3,7 +3,7 @@ import * as https from 'https';
 import {logger} from './logging';
 
 // @todo use util.promisify once it works in electron again
-export const setTimeOutAsync = async (delay: number) => {
+export const setTimeoutAsync = async (delay: number) => {
   return new Promise((resolve) => {
     setTimeout(resolve, delay);
   });
