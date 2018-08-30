@@ -144,7 +144,7 @@ export class HitTrackerDevice {
     const gameStatusBuffer = Buffer.alloc(1);
     gameStatusBuffer.writeUInt8(gameStatus, 0);
 
-    await gameStatusCharacteristic.write(gameStatusBuffer, false);
+    await gameStatusCharacteristic.write(gameStatusBuffer, true);
     logger.info(`toggle gameStatus to ${gameStatus}`);
     await this.disconnect();
     this.resetZoneHits();
