@@ -49,9 +49,9 @@
     "ts-node": "^7.0.1",
     "tslint": "^5.10.0",
     "tslint-config-prettier": "^1.15.0",
-    "tslint-config-standard": "^7.1.0",
-    "tslint-language-service": "^0.9.9",
-    "typescript": "^2.9.2"
+    "tslint-config-standard": "^8.0.0",
+    "tslint-language-service": "github:angelozerr/tslint-language-service",
+    "typescript": "^3.0.3"
   },
   "engines": {
     "node": "^8.0"
