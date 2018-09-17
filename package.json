@@ -54,7 +54,7 @@
     "typescript": "^3.0.3"
   },
   "engines": {
-    "node": "^8.0"
+    "node": ">=8.0"
   },
   "prettier": {
     "semi": true,
