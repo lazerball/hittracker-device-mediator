@@ -16,6 +16,7 @@
     "paths": {
       "*": ["./types/*"]
     },
+    "resolveJsonModule": true,
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true
   },
