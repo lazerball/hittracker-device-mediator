@@ -9,7 +9,7 @@ import { Inject } from 'typedi';
 
 @JsonController()
 export class GameController {
-  private gameTimer!: NodeJS.Timer;
+  private gameTimer!: any;
   private deviceManager: HitTrackerDeviceManager;
 
   constructor(@Inject('device-manager') deviceManager: HitTrackerDeviceManager) {
