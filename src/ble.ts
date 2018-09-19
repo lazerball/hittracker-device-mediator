@@ -1,5 +1,7 @@
 import * as _ from 'lodash';
 import * as noble from 'noble';
+import {Characteristic } from 'noble/lib/characteristic'
+import { Peripheral } from 'noble/lib/peripheral';
 import * as util from 'util';
 import { logger } from './logging';
 import * as hdmUtil from './util';
@@ -62,11 +64,11 @@ export class HitTrackerDevice {
   public active = false;
   public lastSeen: number;
   public zoneHits: number[];
-  private peripheral: noble.Peripheral;
+  private peripheral: Peripheral;
 
   private lastHit: number[];
 
-  constructor(peripheral: noble.Peripheral, zoneCount = 2) {
+  constructor(peripheral: Peripheral, zoneCount = 2) {
     this.peripheral = peripheral;
     this.txPowerLevel = this.peripheral.advertisement.txPowerLevel;
     this.lastSeen = Date.now();
@@ -82,7 +84,7 @@ export class HitTrackerDevice {
       [GAME_SERVICE_UUID],
       [GAME_SERVICE_LED_CONFIGURE_CHAR_UUID]
     );
-
+    if (!characteristics) return;
     const ledConfigCharacteristic = characteristics[0];
 
     for (const [zone, zoneLedConfig] of Object.entries(ledConfig.zones)) {
@@ -138,6 +140,7 @@ export class HitTrackerDevice {
       [GAME_SERVICE_UUID],
       [GAME_SERVICE_GAME_STATUS_CHAR_UUID]
     );
+    if (!services || !characteristics) return;
     logger.info(`discovered game service: ${services[0].uuid}`);
     const gameStatusCharacteristic = characteristics[0];
 
@@ -168,7 +171,7 @@ export class HitTrackerDevice {
 
     // sometimes manufacturerData is in fact not defined even though the type says so
     // tslint:disable-next-line: strict-type-predicates
-    if (manufacturerData === undefined) {
+    if (!manufacturerData) {
       logger.error(`[${this.peripheral.address}] Couldn't find manufacturerData`);
       return;
     }
@@ -322,7 +325,7 @@ export class HitTrackerDeviceManager {
     await this.startScanning();
   }
 
-  private discoverPeripherals(peripheral: noble.Peripheral) {
+  private discoverPeripherals(peripheral: Peripheral) {
     const localName = peripheral.advertisement.localName;
     const address = peripheral.address;
 
