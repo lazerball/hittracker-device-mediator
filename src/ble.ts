@@ -1,7 +1,5 @@
 import * as _ from 'lodash';
-import * as noble from 'noble';
-import {Characteristic } from 'noble/lib/characteristic'
-import { Peripheral } from 'noble/lib/peripheral';
+import { default as noble, Characteristic, Peripheral } from 'noble';
 import * as util from 'util';
 import { logger } from './logging';
 import * as hdmUtil from './util';
