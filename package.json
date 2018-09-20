@@ -5,8 +5,8 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "tsc",
-    "prepublishOnly": "tsc",
+    "build": "tsc --project .",
+    "prepublishOnly": "npm run build",
     "lint": "tslint --project .",
     "run": "ts-node ./src/index.ts",
     "test": "echo \"Error: no test specified\" && exit 1"
