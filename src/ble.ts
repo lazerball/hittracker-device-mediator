@@ -120,7 +120,7 @@ export class HitTrackerDevice {
         ledConfigBuffer.writeUInt16LE(zoneLedConfig.hitBlinkTime, 12);
         ledConfigBuffer.writeUInt16LE(zoneLedConfig.hitTimePerPixel, 14);
       }
-      await ledConfigCharacteristic.write(ledConfigBuffer, false);
+      await ledConfigCharacteristic.write(ledConfigBuffer);
 
       logger.info(`setting led configuration to ${ledConfigBuffer.toString('hex')} for ${zone}`);
     }
@@ -145,7 +145,7 @@ export class HitTrackerDevice {
     const gameStatusBuffer = Buffer.alloc(1);
     gameStatusBuffer.writeUInt8(gameStatus, 0);
 
-    await gameStatusCharacteristic.write(gameStatusBuffer, true);
+    await gameStatusCharacteristic.write(gameStatusBuffer);
     logger.info(`toggle gameStatus to ${gameStatus}`);
     await this.disconnect();
     this.resetZoneHits();
