@@ -55,6 +55,11 @@ interface IGameConfig {
   ledConfigs: ILedZonesConfig;
 }
 
+export interface DeviceManagerOptions {
+  allowDuplicates: boolean;
+  scanTimeOut: number;
+}
+
 export class HitTrackerDevice {
   public txPowerLevel = 0;
   public batteryLevel = 100;
@@ -210,16 +215,19 @@ export class HitTrackerDevice {
 
 @Service()
 export class HitTrackerDeviceManager {
-  private allowDuplicates = true;
-  private scanTimeOut: number;
+  private options: DeviceManagerOptions;
   private seenPeripherals: DeviceMap = new Map<string, HitTrackerDevice>();
   private baseUrl: string;
   private isScanning = false;
 
-  constructor(baseUrl: string, scanTimeOut: number = 5000, allowDuplicates = true) {
+  constructor(baseUrl: string, nobleBindingName: string | null = null, options: Partial<DeviceManagerOptions> = {}) {
     this.baseUrl = baseUrl;
-    this.allowDuplicates = allowDuplicates;
-    this.scanTimeOut = scanTimeOut;
+
+    const defaults = {
+      scanTimeOut: 5000,
+      allowDuplicates: true,
+    };
+    this.options = { ...defaults, ...options };
 
     if (process.platform !== 'win32') {
       setInterval(this.restartScanning.bind(this), 600000);
@@ -257,7 +265,7 @@ export class HitTrackerDeviceManager {
     }
     logger.info('Start Scan');
     try {
-      await noble.startScanning([GAME_SERVICE_UUID], this.allowDuplicates);
+      await noble.startScanning([GAME_SERVICE_UUID], this.options.allowDuplicates);
     } catch (e) {
       logger.error(e);
     }
@@ -299,7 +307,7 @@ export class HitTrackerDeviceManager {
         }
       }
     });
-    await hdmUtil.setTimeoutAsync(this.scanTimeOut);
+    await hdmUtil.setTimeoutAsync(this.options.scanTimeOut);
     await this.startScanning();
   }
 
@@ -319,7 +327,7 @@ export class HitTrackerDeviceManager {
       await Promise.resolve(promiseGroup);
     }
 
-    await hdmUtil.setTimeoutAsync(this.scanTimeOut);
+    await hdmUtil.setTimeoutAsync(this.options.scanTimeOut);
     await this.startScanning();
   }
 
