@@ -1,5 +1,5 @@
 import * as _ from 'lodash';
-import { default as noble, Characteristic, Peripheral } from 'noble';
+import { Characteristic, Noble, Peripheral } from 'noble';
 import * as util from 'util';
 import { logger } from './logging';
 import * as hdmUtil from './util';
@@ -11,6 +11,8 @@ const GAME_SERVICE_GAME_STATUS_CHAR_UUID = 'a801';
 const GAME_SERVICE_LED_CONFIGURE_CHAR_UUID = 'a803';
 
 type DeviceMap = Map<string, HitTrackerDevice>;
+
+const noble = new Noble();
 
 export enum GameTypes {
   BLINK,

@@ -25,7 +25,7 @@
     "axios": "^0.18",
     "commander": "github:tj/commander.js",
     "debug": "^3.2.6",
-    "koa": "^2.5.3",
+    "koa": "^2.7.0",
     "koa-bodyparser": "^4.2.1",
     "koa-logger": "^3.2.0",
     "koa-logger-winston": "^0.0.2",
@@ -33,26 +33,26 @@
     "koa-router": "^7.4.0",
     "lodash": "^4.17.11",
     "noble": "github:jrobeson/noble#refactor",
-    "reflect-metadata": "^0.1.12",
+    "reflect-metadata": "^0.1.13",
     "routing-controllers": "^0.7.7",
     "typedi": "^0.7.3",
     "winston": "^2.4.4",
-    "ws": "^6.1.0"
+    "ws": "^6.1.3"
   },
   "devDependencies": {
-    "@types/koa": "^2.0.46",
+    "@types/koa": "^2.0.48",
     "@types/koa-bodyparser": "^3.0.26",
     "@types/koa-logger": "^2.0.3",
-    "@types/koa-router": "^7.0.32",
-    "@types/lodash": "^4.14.117",
-    "@types/node": "^10.11.7",
-    "prettier": "^1.14.3",
+    "@types/koa-router": "^7.0.39",
+    "@types/lodash": "^4.14.120",
+    "@types/node": "^10.12.21",
+    "prettier": "^1.16.3",
     "ts-node": "^7.0.1",
-    "tslint": "^5.10.0",
-    "tslint-config-prettier": "^1.15.0",
+    "tslint": "^5.12.1",
+    "tslint-config-prettier": "^1.17.0",
     "tslint-config-standard": "^8.0.0",
     "tslint-language-service": "github:angelozerr/tslint-language-service",
-    "typescript": "^3.1.3"
+    "typescript": "^3.3.1"
   },
   "engines": {
     "node": ">=8.0"
