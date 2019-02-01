@@ -296,7 +296,10 @@ export class HitTrackerDeviceManager {
 
   public async stopGame(gameConfiguration: hdmUtil.GameConfiguration) {
     await this.stopScanning();
-    const stopPeripherals = this.allAddresses() ? gameConfiguration.units.map(unit => unit.radioId) : [];
+    let stopPeripherals = hdmUtil.intersection(this.allAddresses(), gameConfiguration.units.map(unit => unit.radioId));
+    if (stopPeripherals.length === 0) {
+      stopPeripherals = this.allAddresses();
+    }
     logger.info(`Stopping game for peripherals: ${JSON.stringify(stopPeripherals)}`);
     stopPeripherals.forEach(async address => {
       if (this.hasDevice(address)) {
