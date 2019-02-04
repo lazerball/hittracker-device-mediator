@@ -319,7 +319,10 @@ export class HitTrackerDeviceManager {
   public async startGame(gameConfiguration: hdmUtil.GameConfiguration) {
     logger.info('Starting Game');
     await this.stopScanning();
-    const ourPeripherals = hdmUtil.intersection(this.allAddresses(), gameConfiguration.units.map(unit => unit.radioId));
+    let ourPeripherals = hdmUtil.intersection(this.allAddresses(), gameConfiguration.units.map(unit => unit.radioId));
+    if (ourPeripherals.length === 0) {
+      ourPeripherals = this.allAddresses();
+    }
 
     const chunkedPeripheralAddresses = _.chunk(ourPeripherals, 3);
     for (const peripheralAddressGroup of chunkedPeripheralAddresses) {
