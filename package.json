@@ -46,10 +46,10 @@
     "@types/koa-router": "^7.0.39",
     "@types/lodash": "^4.14.120",
     "@types/node": "^10.12.21",
-    "prettier": "^1.16.3",
+    "prettier": "^1.16.4",
     "ts-node": "^7.0.1",
     "tslint": "^5.12.1",
-    "tslint-config-prettier": "^1.17.0",
+    "tslint-config-prettier": "^1.18.0",
     "tslint-config-standard": "^8.0.0",
     "tslint-language-service": "github:angelozerr/tslint-language-service",
     "typescript": "^3.3.1"
