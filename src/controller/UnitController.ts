@@ -34,7 +34,7 @@ export class UnitController {
     } catch (error) {
       logger.error(error);
     }
-    return { msg: `Set Led Configurtion` };
+    return { msg: `Set Led Configuration` };
   }
 
   @Post('/unit/:address/:value')
