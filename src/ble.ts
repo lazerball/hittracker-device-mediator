@@ -1,10 +1,10 @@
 import * as _ from 'lodash';
 import { Characteristic, Noble, Peripheral } from 'noble';
+import { Service } from 'typedi';
+
 import * as util from 'util';
 import { logger } from './logging';
 import * as hdmUtil from './util';
-
-import { Service } from 'typedi';
 
 const GAME_SERVICE_UUID = 'a800';
 const GAME_SERVICE_GAME_STATUS_CHAR_UUID = 'a801';
