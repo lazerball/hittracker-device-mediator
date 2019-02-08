@@ -229,6 +229,7 @@ export class HitTrackerDeviceManager {
     } catch (e) {
       logger.error(e);
     }
+    await hdmUtil.setTimeoutAsync(this.options.scanTimeOut);
   }
 
   public async stopScanning() {
@@ -241,6 +242,7 @@ export class HitTrackerDeviceManager {
     } catch (e) {
       logger.error(e);
     }
+    await hdmUtil.setTimeoutAsync(this.options.scanTimeOut);
   }
   public allAddresses() {
     return Array.from(this.seenPeripherals.keys());
@@ -293,7 +295,6 @@ export class HitTrackerDeviceManager {
       await Promise.resolve(promiseGroup);
     }
 
-    await hdmUtil.setTimeoutAsync(this.options.scanTimeOut);
     await this.startScanning();
   }
 
