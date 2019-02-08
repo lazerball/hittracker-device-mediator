@@ -1,10 +1,6 @@
 {
   "defaultSeverity": "error",
-  "extends": [
-    "tslint:latest",
-    "tslint-config-standard",
-    "tslint-config-prettier"
-  ],
+  "extends": ["tslint:latest", "tslint-config-standard", "tslint-config-prettier"],
   "rules": {
     "no-var-requires": true,
     "max-classes-per-file": [false],
