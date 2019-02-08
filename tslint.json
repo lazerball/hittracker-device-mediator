@@ -5,6 +5,7 @@
     "no-var-requires": true,
     "max-classes-per-file": [false],
     "object-literal-sort-keys": false,
+    "interface-name": false,
     "semicolon": [true, "always"]
   }
 }
