@@ -263,16 +263,17 @@ export class HitTrackerDeviceManager {
       stopPeripherals = this.allAddresses();
     }
     logger.info(`Stopping game for peripherals: ${JSON.stringify(stopPeripherals)}`);
-    stopPeripherals.forEach(async address => {
-      if (this.hasDevice(address)) {
-        try {
-          await this.getDevice(address).setGameStatus(0);
-        } catch (error) {
-          logger.error(`Failed to stop game because: ${error}`);
+    const chunkedPeripheralAddresses = _.chunk(stopPeripherals, 3);
+    for (const peripheralAddressGroup of chunkedPeripheralAddresses) {
+      const promiseGroup = [];
+      for (const address of peripheralAddressGroup) {
+        if (this.hasDevice(address)) {
+          promiseGroup.push(this.getDevice(address).setGameStatus(0));
         }
       }
-    });
-    await hdmUtil.setTimeoutAsync(this.options.scanTimeOut);
+      await Promise.resolve(promiseGroup);
+    }
+
     await this.startScanning();
   }
 
