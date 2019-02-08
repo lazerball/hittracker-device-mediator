@@ -184,7 +184,7 @@ export class HitTrackerDeviceManager {
     this.baseUrl = baseUrl;
 
     const defaults = {
-      scanTimeOut: 5000,
+      scanTimeOut: 1000,
       allowDuplicates: true,
     };
     this.options = { ...defaults, ...options };
