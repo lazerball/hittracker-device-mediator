@@ -1,7 +1,7 @@
 import { Body, ContentType, Get, JsonController, NotFoundError, Param, Post } from 'routing-controllers';
 
-import { HitTrackerDeviceManager, ILedZonesConfig } from '../ble';
-
+import { HitTrackerDeviceManager } from '../ble';
+import { ILedZonesConfig } from '../interfaces';
 import { logger } from '../logging';
 
 import { Inject } from 'typedi';
