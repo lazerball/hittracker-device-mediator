@@ -1,5 +1,2 @@
-#!/usr/bin/bash
-DIR=$(dirname $(dirname "$0"))
-cd $DIR
-./node_modules/.bin/ts-node ./src/index.ts "$@"
-
+#!/usr/bin/env node
+require('../dist/index.js');
