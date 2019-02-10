@@ -8,7 +8,7 @@ import 'reflect-metadata';
 import { createKoaServer, useContainer } from 'routing-controllers';
 
 import { Container } from 'typedi';
-import {HitTrackerDeviceManager } from './ble';
+import { HitTrackerDeviceManager } from './ble';
 
 // tslint:disable-next-line: no-var-requires
 const packageJson = require('../package.json');
