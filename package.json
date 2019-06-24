@@ -22,7 +22,7 @@
   },
   "dependencies": {
     "@types/ws": "^6.0.1",
-    "axios": "^0.18",
+    "axios": "^0.18.1",
     "commander": "github:tj/commander.js",
     "debug": "^3.2.6",
     "koa": "^2.7.0",
@@ -37,22 +37,22 @@
     "routing-controllers": "^0.7.7",
     "typedi": "^0.7.3",
     "winston": "^2.4.4",
-    "ws": "^6.1.4"
+    "ws": "^6.2.1"
   },
   "devDependencies": {
     "@types/koa": "^2.0.48",
     "@types/koa-bodyparser": "^3.0.26",
     "@types/koa-logger": "^2.0.3",
-    "@types/koa-router": "^7.0.40",
-    "@types/lodash": "^4.14.121",
-    "@types/node": "^10.12.29",
-    "prettier": "^1.16.4",
+    "@types/koa-router": "^7.0.41",
+    "@types/lodash": "^4.14.134",
+    "@types/node": "^10.14.10",
+    "prettier": "^1.18.2",
     "ts-node": "^7.0.1",
-    "tslint": "^5.13.1",
+    "tslint": "^5.18.0",
     "tslint-config-prettier": "^1.18.0",
     "tslint-config-standard": "^8.0.0",
     "tslint-language-service": "github:angelozerr/tslint-language-service",
-    "typescript": "^3.3.3333"
+    "typescript": "^3.5.2"
   },
   "engines": {
     "node": ">=8.0"
